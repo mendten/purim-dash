@@ -89,6 +89,9 @@ export async function POST(request: Request) {
                 contact_id: contactId,
                 pickup_address: pickup,
                 dropoff_address: dropoff,
+                distance: distanceText || null,
+                estimated_cost: costEstimate || null,
+                phone_number: phone,
                 status: 'new'
             });
 

@@ -1,0 +1,62 @@
+{
+  "uber_requests_data": [],
+  "uber_requests_error": null,
+  "insert_test_result": null,
+  "insert_test_error": {
+    "code": "PGRST204",
+    "details": null,
+    "hint": null,
+    "message": "Could not find the 'cost_estimate' column of 'uber_requests' in the schema cache"
+  },
+  "purim_mode": {
+    "key": "purim_mode",
+    "value": "\"true\""
+  },
+  "settings_error": null,
+  "matanos_pledges": [
+    {
+      "id": "4274d649-cce7-4e32-9c0a-7f46e94448d3",
+      "contact_id": "d73e0286-0f5a-40a6-8bfb-4231366fc9bb",
+      "amount": 1,
+      "is_distributed": false,
+      "is_paid_by_student": false,
+      "created_at": "2026-03-02T01:32:25.278211+00:00"
+    },
+    {
+      "id": "333ba18d-1866-45da-9791-57f9dabfb37b",
+      "contact_id": "d73e0286-0f5a-40a6-8bfb-4231366fc9bb",
+      "amount": 10,
+      "is_distributed": false,
+      "is_paid_by_student": true,
+      "created_at": "2026-03-02T01:31:42.25408+00:00"
+    }
+  ],
+  "matanos_error": null,
+  "latest_outbound_msgs": [
+    {
+      "body": "[Purim System] Uber request received!\nPickup: FROM 2756 W MORSE AVE \nTO 6440 N ALBANY AVE\nDropoff: See pickup note\nWe will text you when it is booked!",
+      "direction": "outbound",
+      "created_at": "2026-03-02T02:33:41.813904+00:00"
+    },
+    {
+      "body": "[Purim System] Uber request received!\nPickup: FROM 2756 W MORSE AVE \nTO 6440 N ALBANY AVE\nDropoff: See pickup note\nWe will text you when it is booked!",
+      "direction": "outbound",
+      "created_at": "2026-03-02T02:29:25.394306+00:00"
+    },
+    {
+      "body": "Stop with the tests and just ask your real question!",
+      "direction": "outbound",
+      "created_at": "2026-03-02T02:26:21.754683+00:00"
+    },
+    {
+      "body": "test",
+      "direction": "outbound",
+      "created_at": "2026-03-02T02:19:48.001638+00:00"
+    },
+    {
+      "body": "[Purim System] Uber request received!\nPickup: FROM 2756 W MORSE AVE \nTO 6440 N ALBANY AVE\nDropoff: See pickup note\nWe will text you when it is booked!",
+      "direction": "outbound",
+      "created_at": "2026-03-02T01:30:53.726799+00:00"
+    }
+  ]
+}

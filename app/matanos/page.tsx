@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Lock, LogOut, DollarSign, History, CheckCircle2 } from "lucide-react";
+import { Lock, LogOut, DollarSign, History, CheckCircle2, XCircle } from "lucide-react";
+import Link from "next/link";
 
 type Pledge = {
     id: string;
@@ -27,7 +28,6 @@ export default function MatanosDashboard() {
     const [pledges, setPledges] = useState<Pledge[]>([]);
     const [view, setView] = useState<'live' | 'settlement'>('live');
 
-    // Load PIN
     useEffect(() => {
         async function fetchPin() {
             const { data } = await supabase
@@ -41,29 +41,27 @@ export default function MatanosDashboard() {
         fetchPin();
     }, []);
 
-    // Load Pledges
+    const fetchPledges = useCallback(async () => {
+        const { data } = await supabase
+            .from('matanos_pledges')
+            .select(`*, contacts(name, phone_number)`)
+            .order('created_at', { ascending: false });
+
+        if (data) setPledges(data as Pledge[]);
+    }, []);
+
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        const fetchPledges = async () => {
-            const { data, error } = await supabase
-                .from('matanos_pledges')
-                .select(`*, contacts(name, phone_number)`)
-                .order('created_at', { ascending: false });
-
-            if (data) setPledges(data as any);
-        };
-
         fetchPledges();
 
-        // Listen for new pledges
         const channel = supabase
             .channel('public:matanos_pledges')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'matanos_pledges' }, fetchPledges)
             .subscribe();
 
         return () => { supabase.removeChannel(channel); };
-    }, [isAuthenticated]);
+    }, [isAuthenticated, fetchPledges]);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
@@ -86,6 +84,9 @@ export default function MatanosDashboard() {
             .from('matanos_pledges')
             .update({ is_distributed: true })
             .in('id', pendingIds);
+
+        // Refresh the UI immediately
+        await fetchPledges();
     };
 
     const handleMarkPaid = async (id: string, currentStatus: boolean) => {
@@ -93,6 +94,9 @@ export default function MatanosDashboard() {
             .from('matanos_pledges')
             .update({ is_paid_by_student: !currentStatus })
             .eq('id', id);
+
+        // Refresh the UI immediately
+        await fetchPledges();
     };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">Loading...</div>;
@@ -104,7 +108,7 @@ export default function MatanosDashboard() {
                     <div className="w-16 h-16 bg-[#1a237e]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#1a237e]">
                         <Lock size={32} />
                     </div>
-                    <h1 className="text-2xl font-bold text-[#1a237e] mb-2">Matanos L'Evyonim</h1>
+                    <h1 className="text-2xl font-bold text-[#1a237e] mb-2">Matanos L&apos;Evyonim</h1>
                     <p className="text-slate-500 mb-8">Enter PIN to access distribution dashboard</p>
                     <form onSubmit={handleLogin} className="space-y-4">
                         <input
@@ -124,7 +128,10 @@ export default function MatanosDashboard() {
     }
 
     const pendingAmount = pledges.filter(p => !p.is_distributed).reduce((acc, p) => acc + p.amount, 0);
+    const distributedAmount = pledges.filter(p => p.is_distributed).reduce((acc, p) => acc + p.amount, 0);
     const totalAmount = pledges.reduce((acc, p) => acc + p.amount, 0);
+    const paidAmount = pledges.filter(p => p.is_paid_by_student).reduce((acc, p) => acc + p.amount, 0);
+    const outstandingAmount = totalAmount - paidAmount;
 
     return (
         <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
@@ -134,7 +141,7 @@ export default function MatanosDashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-[#1a237e]">Matanos Distribution</h1>
-                        <p className="text-slate-500 text-sm">Rabbi Perlstein's Live Dashboard</p>
+                        <p className="text-slate-500 text-sm">Rabbi Perlstein&apos;s Live Dashboard</p>
                     </div>
 
                     <div className="flex bg-slate-100 p-1 rounded-xl">
@@ -142,35 +149,45 @@ export default function MatanosDashboard() {
                         <button onClick={() => setView('settlement')} className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${view === 'settlement' ? 'bg-white text-[#1a237e] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Settlement</button>
                     </div>
 
-                    <button onClick={() => setIsAuthenticated(false)} className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all self-end md:self-auto block">
-                        <LogOut size={24} />
-                    </button>
+                    <div className="flex items-center gap-3 self-end md:self-auto">
+                        <Link href="/" className="text-sm font-bold text-slate-400 hover:text-slate-700">← Hub</Link>
+                        <button onClick={() => setIsAuthenticated(false)} className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all block">
+                            <LogOut size={24} />
+                        </button>
+                    </div>
                 </div>
 
                 {view === 'live' ? (
                     <>
                         {/* Stats Cards */}
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid md:grid-cols-3 gap-6">
                             <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#fbc02d] relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-6 text-[#fbc02d]/20"><DollarSign size={80} /></div>
                                 <h2 className="text-slate-500 font-bold mb-2 uppercase tracking-wide text-sm relative z-10">Pending Cash Out</h2>
-                                <p className="text-6xl font-black text-[#1a237e] relative z-10">${pendingAmount.toFixed(2)}</p>
+                                <p className="text-5xl font-black text-[#1a237e] relative z-10">${pendingAmount.toFixed(2)}</p>
                                 <p className="text-slate-400 text-sm mt-4 relative z-10">New pledges waiting to be distributed</p>
                                 <button
                                     onClick={handleCashOut}
                                     disabled={pendingAmount === 0}
                                     className={`mt-6 w-full py-4 rounded-xl font-bold text-lg transition-all z-10 relative
-                    ${pendingAmount > 0 ? 'bg-[#1a237e] text-white hover:bg-[#1a237e]/90 shadow-lg shadow-[#1a237e]/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                                    ${pendingAmount > 0 ? 'bg-[#1a237e] text-white hover:bg-[#1a237e]/90 shadow-lg shadow-[#1a237e]/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
                                 >
-                                    Cash Out (Set to $0)
+                                    Cash Out (Distribute to Poor)
                                 </button>
+                            </div>
+
+                            <div className="bg-white p-8 rounded-2xl shadow-sm border border-green-200 relative overflow-hidden flex flex-col justify-center">
+                                <div className="absolute top-0 right-0 p-6 text-green-100"><CheckCircle2 size={80} /></div>
+                                <h2 className="text-green-600 font-bold mb-2 uppercase tracking-wide text-sm relative z-10">Already Distributed</h2>
+                                <p className="text-5xl font-black text-green-600 relative z-10">${distributedAmount.toFixed(2)}</p>
+                                <p className="text-slate-400 text-sm mt-2 relative z-10">Total given out so far today</p>
                             </div>
 
                             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden flex flex-col justify-center">
                                 <div className="absolute top-0 right-0 p-6 text-slate-100"><History size={80} /></div>
-                                <h2 className="text-slate-500 font-bold mb-2 uppercase tracking-wide text-sm relative z-10">Historical Total Today</h2>
+                                <h2 className="text-slate-500 font-bold mb-2 uppercase tracking-wide text-sm relative z-10">Grand Total</h2>
                                 <p className="text-5xl font-black text-slate-800 relative z-10">${totalAmount.toFixed(2)}</p>
-                                <p className="text-slate-400 text-sm mt-2 relative z-10">Total collected regardless of cash-outs</p>
+                                <p className="text-slate-400 text-sm mt-2 relative z-10">Everything collected today</p>
                             </div>
                         </div>
 
@@ -209,35 +226,62 @@ export default function MatanosDashboard() {
                     </>
                 ) : (
                     /* Settlement View */
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100">
-                            <h3 className="font-bold text-[#1a237e]">Post-Purim Settlement</h3>
-                            <p className="text-sm text-slate-500">Mark who actually brought you the physical cash/check</p>
+                    <>
+                        {/* Settlement Totals */}
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 text-center">
+                                <p className="text-xs font-bold text-slate-400 uppercase">Total Owed</p>
+                                <p className="text-2xl font-black text-slate-800">${totalAmount.toFixed(2)}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl border border-green-200 text-center">
+                                <p className="text-xs font-bold text-green-600 uppercase">Paid</p>
+                                <p className="text-2xl font-black text-green-600">${paidAmount.toFixed(2)}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl border border-red-200 text-center">
+                                <p className="text-xs font-bold text-red-500 uppercase">Outstanding</p>
+                                <p className="text-2xl font-black text-red-500">${outstandingAmount.toFixed(2)}</p>
+                            </div>
                         </div>
-                        <div className="divide-y divide-slate-100">
-                            {pledges.map(p => (
-                                <div key={p.id} className="p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div>
-                                        <p className="text-lg font-bold text-slate-800">{p.contacts?.name || 'Unknown Bocher'}</p>
-                                        <p className="text-slate-500 font-mono text-sm">{p.contacts?.phone_number}</p>
+
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100">
+                                <h3 className="font-bold text-[#1a237e]">Post-Purim Settlement</h3>
+                                <p className="text-sm text-slate-500">Mark who actually brought you the physical cash/check</p>
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                                {pledges.map(p => (
+                                    <div key={p.id} className={`p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${p.is_paid_by_student ? 'bg-green-50/50 opacity-60' : 'bg-white'}`}>
+                                        <div>
+                                            <p className={`text-lg font-bold ${p.is_paid_by_student ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{p.contacts?.name || 'Unknown Bocher'}</p>
+                                            <p className="text-slate-500 font-mono text-sm">{p.contacts?.phone_number}</p>
+                                        </div>
+                                        <div className="flex items-center gap-6 justify-between md:justify-end">
+                                            <p className={`text-2xl font-black ${p.is_paid_by_student ? 'text-slate-400' : 'text-[#1a237e]'}`}>${p.amount.toFixed(2)}</p>
+                                            <button
+                                                onClick={() => handleMarkPaid(p.id, p.is_paid_by_student)}
+                                                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all
+                                                ${p.is_paid_by_student
+                                                        ? 'bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600 border border-green-200 hover:border-red-200'
+                                                        : 'bg-slate-100 text-slate-500 hover:bg-green-100 hover:text-green-700 border border-slate-200 hover:border-green-200'}`}
+                                            >
+                                                {p.is_paid_by_student ? (
+                                                    <>
+                                                        <CheckCircle2 size={18} />
+                                                        Paid ✓
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <XCircle size={18} />
+                                                        Mark as Paid
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-6 justify-between md:justify-end">
-                                        <p className="text-2xl font-black text-[#1a237e]">${p.amount.toFixed(2)}</p>
-                                        <button
-                                            onClick={() => handleMarkPaid(p.id, p.is_paid_by_student)}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all
-                          ${p.is_paid_by_student
-                                                    ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
-                                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-200'}`}
-                                        >
-                                            <CheckCircle2 size={18} />
-                                            {p.is_paid_by_student ? 'Paid' : 'Mark as Paid'}
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    </>
                 )}
             </div>
         </div>

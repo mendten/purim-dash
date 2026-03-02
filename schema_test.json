@@ -1,0 +1,9 @@
+{
+  "minimal_insert_data": null,
+  "minimal_insert_error": {
+    "code": "23514",
+    "details": "Failing row contains (79925823-8a71-456d-bd9c-5341f465bf0b, null, TEST, TEST, pending, null, 2026-03-02 02:38:12.129915+00).",
+    "hint": null,
+    "message": "new row for relation \"uber_requests\" violates check constraint \"uber_requests_status_check\""
+  }
+}

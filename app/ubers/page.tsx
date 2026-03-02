@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Car, CheckCircle2, Copy, Navigation, MapPin, X } from "lucide-react";
+import { Car, CheckCircle2, Copy, Navigation, MapPin, X, Clock, DollarSign, Phone } from "lucide-react";
+import Link from "next/link";
 
 type UberRequest = {
     id: string;
@@ -11,6 +12,9 @@ type UberRequest = {
     dropoff_address: string;
     status: 'new' | 'booked' | 'completed' | 'cancelled';
     exact_price: number | null;
+    distance: string | null;
+    estimated_cost: string | null;
+    phone_number: string | null;
     created_at: string;
     contacts?: {
         name: string;
@@ -24,7 +28,6 @@ export default function UbersDashboard() {
     const [exactPriceInput, setExactPriceInput] = useState("");
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
-    // Ask for notification permission on mount
     useEffect(() => {
         if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
             Notification.requestPermission();
@@ -36,7 +39,7 @@ export default function UbersDashboard() {
             .from("uber_requests")
             .select(`*, contacts(name, phone_number)`)
             .order("created_at", { ascending: false });
-        if (data) setRequests(data as any);
+        if (data) setRequests(data as UberRequest[]);
     };
 
     useEffect(() => {
@@ -46,11 +49,9 @@ export default function UbersDashboard() {
             .channel("public:uber_requests")
             .on("postgres_changes", { event: "INSERT", schema: "public", table: "uber_requests" }, (payload) => {
                 fetchRequests();
-                console.log("New Uber Request:", payload);
-                // Show desktop notification if granted
                 if ("Notification" in window && Notification.permission === "granted") {
                     new Notification("New Uber Request!", {
-                        body: `Pickup: ${payload.new.pickup_address}`,
+                        body: `Pickup: ${(payload.new as UberRequest).pickup_address}`,
                         icon: "/favicon.ico"
                     });
                 }
@@ -67,6 +68,14 @@ export default function UbersDashboard() {
         setTimeout(() => setCopiedId(null), 2000);
     };
 
+    const getName = (req: UberRequest): string => {
+        return req.contacts?.name || 'Unknown Bocher';
+    };
+
+    const getPhone = (req: UberRequest): string => {
+        return req.contacts?.phone_number || req.phone_number || '';
+    };
+
     const handleBookSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!bookingRequest || !exactPriceInput) return;
@@ -74,26 +83,34 @@ export default function UbersDashboard() {
         const price = parseFloat(exactPriceInput);
         if (isNaN(price)) return alert("Please enter a valid number");
 
-        // 1. Update Request
         await supabase
             .from("uber_requests")
             .update({ status: "booked", exact_price: price })
             .eq("id", bookingRequest.id);
 
-        // 2. Queue Outbound SMS Notification
-        await supabase
-            .from("messages")
-            .insert({
-                contact_id: bookingRequest.contact_id,
-                phone_number: bookingRequest.contacts?.phone_number,
-                direction: 'outbound',
-                status: 'queued',
-                body: "Your Uber is booked! If you didn't get the text link from Uber, let us know ASAP (give it a min or so)."
-            });
+        const phone = getPhone(bookingRequest);
+        if (phone) {
+            await supabase
+                .from("messages")
+                .insert({
+                    contact_id: bookingRequest.contact_id || null,
+                    phone_number: phone,
+                    direction: 'outbound',
+                    status: 'queued',
+                    body: `Your Uber has been booked! Make sure you get a confirmation text from Uber. If you don't receive it within 2 minutes, text us back ASAP so we can rebook it.`
+                });
+        }
 
         setBookingRequest(null);
         setExactPriceInput("");
+        await fetchRequests();
     };
+
+    // Stats
+    const totalRides = requests.length;
+    const newRides = requests.filter(r => r.status === 'new').length;
+    const bookedRides = requests.filter(r => r.status === 'booked').length;
+    const totalSpent = requests.reduce((acc, r) => acc + (r.exact_price || 0), 0);
 
     return (
         <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
@@ -110,7 +127,27 @@ export default function UbersDashboard() {
                             <p className="text-slate-500 text-sm">Live Dispatch Dashboard</p>
                         </div>
                     </div>
-                    <a href="/" className="text-sm font-bold text-slate-400 hover:text-slate-700">← Back Hub</a>
+                    <Link href="/" className="text-sm font-bold text-slate-400 hover:text-slate-700">← Back Hub</Link>
+                </div>
+
+                {/* Totals Bar */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-4 rounded-xl border border-slate-100 text-center">
+                        <p className="text-xs font-bold text-slate-400 uppercase">Total</p>
+                        <p className="text-2xl font-black text-slate-800">{totalRides}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-[#fbc02d] text-center">
+                        <p className="text-xs font-bold text-[#fbc02d] uppercase">New</p>
+                        <p className="text-2xl font-black text-[#fbc02d]">{newRides}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-green-200 text-center">
+                        <p className="text-xs font-bold text-green-600 uppercase">Booked</p>
+                        <p className="text-2xl font-black text-green-600">{bookedRides}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-slate-100 text-center">
+                        <p className="text-xs font-bold text-slate-400 uppercase">Total Spent</p>
+                        <p className="text-2xl font-black text-[#1a237e]">${totalSpent.toFixed(2)}</p>
+                    </div>
                 </div>
 
                 {/* Requests Feed */}
@@ -123,8 +160,15 @@ export default function UbersDashboard() {
                                 <div className="md:col-span-1 border-r border-slate-100 pr-4">
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h3 className="text-xl font-bold text-slate-800">{req.contacts?.name || 'Unknown Bocher'}</h3>
-                                            <p className="font-mono text-sm text-slate-500">{req.contacts?.phone_number}</p>
+                                            <h3 className="text-xl font-bold text-slate-800">{getName(req)}</h3>
+                                            {/* Phone number with copy */}
+                                            <div className="flex items-center gap-2 mt-1 group cursor-pointer" onClick={() => handleCopy(getPhone(req), req.id + 'phone')}>
+                                                <Phone size={14} className="text-slate-400" />
+                                                <p className="font-mono text-sm text-slate-500">{getPhone(req) || 'No number'}</p>
+                                                {copiedId === req.id + 'phone'
+                                                    ? <CheckCircle2 size={14} className="text-green-500" />
+                                                    : <Copy size={14} className="text-slate-300 group-hover:text-slate-400" />}
+                                            </div>
                                         </div>
                                         {req.status === 'new' && (
                                             <span className="flex h-3 w-3 relative">
@@ -134,6 +178,23 @@ export default function UbersDashboard() {
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-400 mt-4">{new Date(req.created_at).toLocaleTimeString()}</p>
+                                    {/* Distance & Cost Estimate */}
+                                    {(req.distance || req.estimated_cost) && (
+                                        <div className="mt-3 space-y-1">
+                                            {req.distance && (
+                                                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                                    <Clock size={12} />
+                                                    <span>{req.distance}</span>
+                                                </div>
+                                            )}
+                                            {req.estimated_cost && (
+                                                <div className="flex items-center gap-1.5 text-xs font-bold text-[#1a237e]">
+                                                    <DollarSign size={12} />
+                                                    <span>Est: {req.estimated_cost}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Addresses */}
@@ -203,20 +264,25 @@ export default function UbersDashboard() {
                                 $
                             </div>
                             <h2 className="text-2xl font-bold text-[#1a237e] mb-2">Confirm Booking</h2>
-                            <p className="text-slate-500 mb-6">Enter the exact price from Uber Central for <strong>{bookingRequest.contacts?.name || 'Bocher'}</strong>'s ride to log the cost.</p>
+                            <p className="text-slate-500 mb-2">Enter the exact price from Uber for <strong>{getName(bookingRequest)}</strong>&apos;s ride.</p>
+                            {bookingRequest.estimated_cost && (
+                                <p className="text-sm text-[#1a237e] font-bold bg-[#1a237e]/5 px-3 py-2 rounded-lg mb-4">
+                                    Maps Estimate: {bookingRequest.estimated_cost} ({bookingRequest.distance})
+                                </p>
+                            )}
 
                             <form onSubmit={handleBookSubmit}>
                                 <div className="relative mb-6">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-slate-400 font-medium">$</span>
                                     <input
                                         type="number" step="0.01" min="0" required
-                                        value={exactPriceInput} onChange={e => setExactPriceInput(e.target.value)}
+                                        value={exactPriceInput} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExactPriceInput(e.target.value)}
                                         className="w-full text-4xl font-black text-slate-800 pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-200 focus:border-[#fbc02d] focus:outline-none transition-colors"
                                         placeholder="0.00" autoFocus
                                     />
                                 </div>
                                 <button type="submit" className="w-full bg-[#1a237e] text-white font-bold py-4 rounded-xl hover:bg-[#1a237e]/90 transition-colors text-lg">
-                                    Confirm & SMS Bocher
+                                    Confirm &amp; SMS Bocher
                                 </button>
                             </form>
                         </div>

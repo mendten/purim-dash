@@ -78,10 +78,25 @@ export default function GeneralInbox() {
     };
 
     useEffect(() => {
+        // Ask for notification permission
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+
         fetchMessages();
         const channel = supabase
             .channel('public:messages_inbox')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, fetchMessages)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+                fetchMessages();
+                // Show desktop notification for inbound messages
+                const newMsg = payload.new as Message;
+                if (newMsg.direction === 'inbound' && "Notification" in window && Notification.permission === "granted") {
+                    new Notification("New Text Message!", {
+                        body: `${newMsg.body?.substring(0, 80) || 'New message'}`,
+                        icon: "/favicon.ico"
+                    });
+                }
+            })
             .subscribe();
 
         return () => { supabase.removeChannel(channel); };
@@ -158,9 +173,16 @@ export default function GeneralInbox() {
                                             {convo.name && <p className="text-xs text-slate-400 font-mono">{convo.phone_number}</p>}
                                             <p className="text-xs text-slate-400 truncate mt-1">{convo.lastMessage}</p>
                                         </div>
-                                        <span className="text-[10px] text-slate-300 whitespace-nowrap">
-                                            {new Date(convo.lastTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className="text-[10px] text-slate-300 whitespace-nowrap">
+                                                {new Date(convo.lastTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            {convo.unread > 0 && (
+                                                <span className="bg-[#1a237e] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                                                    {convo.unread}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </button>
                             ))}
