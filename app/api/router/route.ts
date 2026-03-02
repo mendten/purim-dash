@@ -89,9 +89,7 @@ export async function POST(request: Request) {
                 contact_id: contactId,
                 pickup_address: pickup,
                 dropoff_address: dropoff,
-                distance: distanceText || null,
-                cost_estimate: costEstimate || null,
-                status: 'pending'
+                status: 'new'
             });
 
             if (insertErr) {
