@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         // RULE 1: Matanos L'Evyonim (Contains '$' or 'DOLLAR')
         if (text.includes('$') || text.includes('DOLLAR')) {
             const cleanText = text.replace(/[^0-9.]/g, ' ');
-            const numbers = cleanText.split(' ').filter(n => n.length > 0);
+            const numbers = cleanText.split(' ').filter((n: string) => n.length > 0);
             const amount = numbers.length > 0 ? parseFloat(numbers[0]) : 0;
 
             if (amount > 0) {
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
         }
 
         // RULE 2: Uber Requests
-        const uberMatch = text.match(/FROM\s*:?\s*(.*?)\s*TO\s*:?\s*(.*)/is) || text.match(/FROM\s*(.*?)\s*TO\s*(.*)/is);
+        const uberMatch = text.match(/FROM\s*:?\s*([\s\S]*?)\s*TO\s*:?\s*([\s\S]*)/i) || text.match(/FROM\s*([\s\S]*?)\s*TO\s*([\s\S]*)/i);
 
         if (uberMatch || text.includes('FROM ') || text.includes('TO ')) {
             let pickup = text;
