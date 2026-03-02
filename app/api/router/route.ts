@@ -74,10 +74,20 @@ export async function POST(request: Request) {
             let distanceText = "";
             let costEstimate = "";
 
+            const normalizeAddress = (addr: string) => {
+                const lower = addr.toLowerCase();
+                if (lower.includes('chicago') || lower.includes(', il') || lower.includes('illinois') || lower.includes('ny ') || lower.includes('new york') || lower.includes('brooklyn')) {
+                    return addr;
+                }
+                return `${addr}, Chicago, IL`;
+            };
+
             const mapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
             if (mapsApiKey && dropoff !== "See pickup note") {
                 try {
-                    const mapRes = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(pickup)}&destinations=${encodeURIComponent(dropoff)}&units=imperial&key=${mapsApiKey}`);
+                    const originQuery = encodeURIComponent(normalizeAddress(pickup));
+                    const destQuery = encodeURIComponent(normalizeAddress(dropoff));
+                    const mapRes = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originQuery}&destinations=${destQuery}&units=imperial&key=${mapsApiKey}`);
                     const mapData = await mapRes.json();
 
                     if (mapData.rows?.[0]?.elements?.[0]?.status === 'OK') {
