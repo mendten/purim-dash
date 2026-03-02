@@ -10,6 +10,7 @@ type Message = {
     contact_id: string;
     body: string;
     direction: 'inbound' | 'outbound';
+    status: string;
     created_at: string;
     phone_number: string;
     contacts?: {
@@ -216,6 +217,11 @@ export default function GeneralInbox() {
                                                 <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
                                                 <p className={`text-[10px] mt-1 ${msg.direction === 'outbound' ? 'text-white/50' : 'text-slate-400'}`}>
                                                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {msg.direction === 'outbound' && (
+                                                        <span className="ml-1">
+                                                            {msg.status === 'sent' ? ' ✓ Sent' : msg.status === 'queued' ? ' ⏳ Queued...' : ` ${msg.status}`}
+                                                        </span>
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>

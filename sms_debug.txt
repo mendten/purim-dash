@@ -1,0 +1,176 @@
+{
+  "queued_messages": [
+    {
+      "id": "eab24f06-7268-42ea-896b-287c8e3a5e75",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "test",
+      "direction": "outbound",
+      "status": "queued",
+      "image_url": null,
+      "created_at": "2026-03-02T06:32:35.487623+00:00"
+    }
+  ],
+  "recent_20": [
+    {
+      "id": "eab24f06-7268-42ea-896b-287c8e3a5e75",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "test",
+      "status": "queued",
+      "created_at": "2026-03-02T06:32:35.487623+00:00"
+    },
+    {
+      "id": "6326f4a2-e5a1-4d02-8a6d-d816f7653fcb",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "[Purim System] Uber request received!\nPickup: 770 Eastern Pkwy, Brooklyn, NY 11213, USA\nDropoff: 472 Empire Blvd, Brooklyn, NY 11225, USA\nEst. Distance: 1.0 mi (6 mins)\nEst. Cost: $9-$10\nWe will text you when it is booked!",
+      "status": "sent",
+      "created_at": "2026-03-02T06:18:57.228976+00:00"
+    },
+    {
+      "id": "8ad638a6-59be-4e83-ab58-50eed82320cb",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "From 770 eastern pkwy To 472 empire blvd",
+      "status": "received",
+      "created_at": "2026-03-02T06:18:56.757001+00:00"
+    },
+    {
+      "id": "0149e66a-d921-4c8a-93ad-6101d7cac554",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "2$",
+      "status": "received",
+      "created_at": "2026-03-02T06:18:51.792226+00:00"
+    },
+    {
+      "id": "e8efed21-5b65-492e-998d-e2a1c9a721b3",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "Hello how are you",
+      "status": "received",
+      "created_at": "2026-03-02T06:06:49.604626+00:00"
+    },
+    {
+      "id": "1f6dadd3-9dd2-49a4-b9d0-9183b02accb6",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "[Purim System] Uber request received!\nPickup: 770 Eastern Pkwy, Brooklyn, NY 11213, USA\nDropoff: 472 Empire Blvd, Brooklyn, NY 11225, USA\nEst. Distance: 1.0 mi (6 mins)\nEst. Cost: $9-$10\nWe will text you when it is booked!",
+      "status": "sent",
+      "created_at": "2026-03-02T06:06:20.568168+00:00"
+    },
+    {
+      "id": "32d87e11-9111-4529-9963-bbe35d47619e",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "From 770 eastern pkwy To 472 empire blvd",
+      "status": "received",
+      "created_at": "2026-03-02T06:06:18.813746+00:00"
+    },
+    {
+      "id": "44e63639-7081-4f7d-bad8-7221f601f9ad",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "2$",
+      "status": "received",
+      "created_at": "2026-03-02T06:05:55.94213+00:00"
+    },
+    {
+      "id": "c7711aeb-530d-4fd0-9057-f4df68a4b16e",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "Hello how are you 770 eastern pkwy\nIm good 472 empire blvd",
+      "status": "received",
+      "created_at": "2026-03-02T05:58:44.935321+00:00"
+    },
+    {
+      "id": "bd3f7747-e4b1-44bd-8414-eff6e8a3c0a1",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "Your Uber has been booked! Make sure you get a confirmation text from Uber. If you don't receive it within 2 minutes, text us back ASAP so we can rebook it.",
+      "status": "sent",
+      "created_at": "2026-03-02T05:54:18.284512+00:00"
+    },
+    {
+      "id": "1586a1dc-7bc2-4bd8-a25b-1ed89663e3b7",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "[Purim System] Uber request received!\nPickup: 2756 W MORSE AVE\nDropoff: 6440 N ALBANY AVE\nEst. Distance: 1.1 mi (5 mins)\nEst. Cost: $9-$10\nWe will text you when it is booked!",
+      "status": "sent",
+      "created_at": "2026-03-02T05:53:51.836146+00:00"
+    },
+    {
+      "id": "1e4b0423-b8a0-4323-8a1a-3735d72bcb3c",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "From 2756 w morse ave \nTo 6440 n albany ave",
+      "status": "received",
+      "created_at": "2026-03-02T05:53:50.146475+00:00"
+    },
+    {
+      "id": "19f8c141-7660-440d-8af8-6c591475056b",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "[Purim System] Uber request received!\nPickup: 2756 W MORSE AVE\nDropoff: 6440 N ALBANY AVE\nEst. Distance: 1.1 mi (5 mins)\nEst. Cost: $9-$10\nWe will text you when it is booked!",
+      "status": "sent",
+      "created_at": "2026-03-02T05:17:01.496009+00:00"
+    },
+    {
+      "id": "98b242db-dd6e-423f-b861-7168cbc949f1",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "From 2756 w morse ave \nTo 6440 n albany ave",
+      "status": "received",
+      "created_at": "2026-03-02T05:16:59.576977+00:00"
+    },
+    {
+      "id": "8c99446c-8fd5-4018-92b0-58ef386ad310",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "[Purim System] Uber request received!\nPickup: FROM 2756 W MORSE AVE \nTO 6440 N ALBANY AVE\nDropoff: See pickup note\nWe will text you when it is booked!",
+      "status": "sent",
+      "created_at": "2026-03-02T02:33:41.813904+00:00"
+    },
+    {
+      "id": "fe40b437-ad26-4fe7-a325-8e381dbccae9",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "From 2756 w morse ave \nTo 6440 n albany ave",
+      "status": "received",
+      "created_at": "2026-03-02T02:33:41.063557+00:00"
+    },
+    {
+      "id": "c3caadc8-ee84-4ca8-835f-e18c289d04c0",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "[Purim System] Uber request received!\nPickup: FROM 2756 W MORSE AVE \nTO 6440 N ALBANY AVE\nDropoff: See pickup note\nWe will text you when it is booked!",
+      "status": "sent",
+      "created_at": "2026-03-02T02:29:25.394306+00:00"
+    },
+    {
+      "id": "bb917865-c008-48b3-9853-982cb3659818",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "From 2756 w morse ave \nTo 6440 n albany ave",
+      "status": "received",
+      "created_at": "2026-03-02T02:29:25.032079+00:00"
+    },
+    {
+      "id": "6fdff81b-ed9e-4c29-9a0f-3ea754baffee",
+      "direction": "inbound",
+      "phone_number": "+14438501308",
+      "body": "Is this real?",
+      "status": "received",
+      "created_at": "2026-03-02T02:26:38.602783+00:00"
+    },
+    {
+      "id": "f02afce3-1d81-4fd7-98dd-b32618aee9f6",
+      "direction": "outbound",
+      "phone_number": "+14438501308",
+      "body": "Stop with the tests and just ask your real question!",
+      "status": "sent",
+      "created_at": "2026-03-02T02:26:21.754683+00:00"
+    }
+  ]
+}
