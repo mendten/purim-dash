@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Lock, LogOut, DollarSign, History, CheckCircle2, XCircle } from "lucide-react";
+import { Lock, LogOut, DollarSign, History, CheckCircle2, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
 type Pledge = {
@@ -27,6 +27,17 @@ export default function MatanosDashboard() {
 
     const [pledges, setPledges] = useState<Pledge[]>([]);
     const [view, setView] = useState<'live' | 'settlement'>('live');
+
+    const [expandedContacts, setExpandedContacts] = useState<Set<string>>(new Set());
+
+    const toggleContact = (key: string) => {
+        setExpandedContacts(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
+    };
 
     useEffect(() => {
         async function fetchPin() {
@@ -143,6 +154,52 @@ export default function MatanosDashboard() {
     const totalAmount = pledges.reduce((acc, p) => acc + p.amount, 0);
     const paidAmount = pledges.filter(p => p.is_paid_by_student).reduce((acc, p) => acc + p.amount, 0);
     const outstandingAmount = totalAmount - paidAmount;
+
+    const getGroupedPledges = () => {
+        const groups = new Map<string, {
+            key: string;
+            contact_id: string;
+            phone_number: string;
+            name: string;
+            totalAmount: number;
+            paidAmount: number;
+            outstandingAmount: number;
+            isFullyPaid: boolean;
+            pledges: Pledge[];
+        }>();
+
+        pledges.forEach(p => {
+            const key = p.contact_id || p.contacts?.phone_number || p.id;
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    key: key,
+                    contact_id: p.contact_id || '',
+                    phone_number: p.contacts?.phone_number || 'Unknown Number',
+                    name: p.contacts?.name || 'Unknown Bocher',
+                    totalAmount: 0,
+                    paidAmount: 0,
+                    outstandingAmount: 0,
+                    isFullyPaid: false,
+                    pledges: []
+                });
+            }
+            const g = groups.get(key)!;
+            g.pledges.push(p);
+            g.totalAmount += p.amount;
+            if (p.is_paid_by_student) {
+                g.paidAmount += p.amount;
+            } else {
+                g.outstandingAmount += p.amount;
+            }
+        });
+
+        return Array.from(groups.values()).map(g => {
+            g.isFullyPaid = g.outstandingAmount === 0 && g.totalAmount > 0;
+            return g;
+        });
+    };
+
+    const groupedPledges = getGroupedPledges();
 
     return (
         <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
@@ -278,34 +335,61 @@ export default function MatanosDashboard() {
                                 <p className="text-sm text-slate-500">Mark who actually brought you the physical cash/check</p>
                             </div>
                             <div className="divide-y divide-slate-100">
-                                {pledges.map(p => (
-                                    <div key={p.id} className={`p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${p.is_paid_by_student ? 'bg-green-50/50 opacity-60' : 'bg-white'}`}>
-                                        <div>
-                                            <p className={`text-lg font-bold ${p.is_paid_by_student ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{p.contacts?.name || 'Unknown Bocher'}</p>
-                                            <p className="text-slate-500 font-mono text-sm">{p.contacts?.phone_number}</p>
+                                {groupedPledges.map(g => (
+                                    <div key={g.key} className={`transition-all ${g.isFullyPaid ? 'bg-green-50/50 opacity-60' : 'bg-white'}`}>
+                                        {/* Header Row */}
+                                        <div
+                                            onClick={() => toggleContact(g.key)}
+                                            className="p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                {expandedContacts.has(g.key) ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+                                                <div>
+                                                    <p className={`text-lg font-bold ${g.isFullyPaid ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{g.name}</p>
+                                                    <p className="text-slate-500 font-mono text-sm">{g.phone_number}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-6 justify-between md:justify-end">
+                                                <div className="text-right">
+                                                    <p className={`text-2xl font-black ${g.isFullyPaid ? 'text-slate-400' : 'text-[#1a237e]'}`}>${g.totalAmount.toFixed(2)}</p>
+                                                    {g.outstandingAmount > 0 && g.paidAmount > 0 && (
+                                                        <p className="text-xs font-bold text-red-500">${g.outstandingAmount.toFixed(2)} remaining</p>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-6 justify-between md:justify-end">
-                                            <p className={`text-2xl font-black ${p.is_paid_by_student ? 'text-slate-400' : 'text-[#1a237e]'}`}>${p.amount.toFixed(2)}</p>
-                                            <button
-                                                onClick={() => handleMarkPaid(p.id, p.is_paid_by_student)}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all
-                                                ${p.is_paid_by_student
-                                                        ? 'bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600 border border-green-200 hover:border-red-200'
-                                                        : 'bg-slate-100 text-slate-500 hover:bg-green-100 hover:text-green-700 border border-slate-200 hover:border-green-200'}`}
-                                            >
-                                                {p.is_paid_by_student ? (
-                                                    <>
-                                                        <CheckCircle2 size={18} />
-                                                        Paid ✓
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <XCircle size={18} />
-                                                        Mark as Paid
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
+
+                                        {/* Expanded Pledges List */}
+                                        {expandedContacts.has(g.key) && (
+                                            <div className="bg-slate-50/50 px-4 md:px-14 pb-4 md:pb-6 space-y-2 border-t border-slate-100 pt-4">
+                                                {g.pledges.map(p => (
+                                                    <div key={p.id} className="flex flex-col md:flex-row md:items-center justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-sm gap-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                                                            <span className="text-slate-500 font-medium">${p.amount.toFixed(2)}</span>
+                                                            <span className="text-xs text-slate-400">{new Date(p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleMarkPaid(p.id, p.is_paid_by_student); }}
+                                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all
+                                                            ${p.is_paid_by_student
+                                                                    ? 'bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600 border border-green-200 hover:border-red-200'
+                                                                    : 'bg-slate-100 text-slate-500 hover:bg-green-100 hover:text-green-700 border border-slate-200 hover:border-green-200'}`}
+                                                        >
+                                                            {p.is_paid_by_student ? (
+                                                                <>
+                                                                    <CheckCircle2 size={16} /> Paid ✓
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <XCircle size={16} /> Mark as Paid
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
