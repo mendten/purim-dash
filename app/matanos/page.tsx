@@ -74,9 +74,9 @@ export default function MatanosDashboard() {
         }
     };
 
-    const handleCashOut = async () => {
-        if (!confirm("Are you sure you want to cash out all pending pledges? This will mark them as distributed to the poor.")) return;
+    const [showCashOutConfirm, setShowCashOutConfirm] = useState(false);
 
+    const handleCashOut = async () => {
         const pendingIds = pledges.filter(p => !p.is_distributed).map(p => p.id);
         if (pendingIds.length === 0) return;
 
@@ -86,10 +86,11 @@ export default function MatanosDashboard() {
             .in('id', pendingIds);
 
         if (error) {
-            alert(`Error caching out: ${error.message}`);
+            alert(`Error cashing out: ${error.message}`);
             return;
         }
 
+        setShowCashOutConfirm(false);
         // Refresh the UI immediately
         await fetchPledges();
     };
@@ -176,14 +177,32 @@ export default function MatanosDashboard() {
                                 <h2 className="text-slate-500 font-bold mb-2 uppercase tracking-wide text-sm relative z-10">Pending Cash Out</h2>
                                 <p className="text-5xl font-black text-[#1a237e] relative z-10">${pendingAmount.toFixed(2)}</p>
                                 <p className="text-slate-400 text-sm mt-4 relative z-10">New pledges waiting to be distributed</p>
-                                <button
-                                    onClick={handleCashOut}
-                                    disabled={pendingAmount === 0}
-                                    className={`mt-6 w-full py-4 rounded-xl font-bold text-lg transition-all z-10 relative
-                                    ${pendingAmount > 0 ? 'bg-[#1a237e] text-white hover:bg-[#1a237e]/90 shadow-lg shadow-[#1a237e]/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
-                                >
-                                    Cash Out (Distribute to Poor)
-                                </button>
+
+                                {showCashOutConfirm ? (
+                                    <div className="mt-6 flex gap-3 w-full z-10 relative">
+                                        <button
+                                            onClick={handleCashOut}
+                                            className="flex-1 py-4 rounded-xl font-bold transition-all bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-500/20"
+                                        >
+                                            Confirm
+                                        </button>
+                                        <button
+                                            onClick={() => setShowCashOutConfirm(false)}
+                                            className="flex-1 py-4 rounded-xl font-bold transition-all bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setShowCashOutConfirm(true)}
+                                        disabled={pendingAmount === 0}
+                                        className={`mt-6 w-full py-4 rounded-xl font-bold text-lg transition-all z-10 relative
+                                        ${pendingAmount > 0 ? 'bg-[#1a237e] text-white hover:bg-[#1a237e]/90 shadow-lg shadow-[#1a237e]/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                                    >
+                                        Cash Out (Distribute)
+                                    </button>
+                                )}
                             </div>
 
                             <div className="bg-white p-8 rounded-2xl shadow-sm border border-green-200 relative overflow-hidden flex flex-col justify-center">

@@ -18,8 +18,17 @@ export async function POST(request: Request) {
 
         const message = body.record;
         const text = message.body ? message.body.toUpperCase() : '';
-        const contactId = message.contact_id;
+        let contactId = message.contact_id;
         const phone = message.phone_number;
+
+        // Ensure we always have a contact_id if the contact exists
+        if (!contactId && phone) {
+            console.log(`[PURIM ROUTER] Contact ID missing from webhook payload, fetching manually for ${phone}...`);
+            const { data: contactData } = await supabase.from('contacts').select('id').eq('phone_number', phone).maybeSingle();
+            if (contactData) {
+                contactId = contactData.id;
+            }
+        }
 
         console.log(`[PURIM ROUTER] Processing text from ${phone}: ${text.substring(0, 30)}...`);
 
