@@ -121,8 +121,27 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: 'success', routedTo: 'ubers' });
         }
 
-        console.log(`[PURIM ROUTER] No match, leaving in Inbox.`);
-        return NextResponse.json({ status: 'success', routedTo: 'inbox' });
+        console.log(`[PURIM ROUTER] No match, leaving in Inbox and forwarding.`);
+
+        const RABBI_PHONE = "+14438501308";
+        if (phone !== RABBI_PHONE) {
+            let senderName = phone;
+            // Fetch name explicitly since this webhook might not have the join
+            const { data: contactData } = await supabase.from('contacts').select('name').eq('phone_number', phone).single();
+            if (contactData && contactData.name) {
+                senderName = contactData.name;
+            }
+
+            await supabase.from('messages').insert({
+                contact_id: null,
+                phone_number: RABBI_PHONE,
+                body: `[FWD from ${senderName}]:\n${message.body}`,
+                direction: 'outbound',
+                status: 'queued'
+            });
+        }
+
+        return NextResponse.json({ status: 'success', routedTo: 'inbox_and_forwarded' });
 
     } catch (e: any) {
         console.error(`[PURIM ROUTER] ❌ EXCEPTION:`, e);
