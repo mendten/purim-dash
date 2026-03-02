@@ -1,0 +1,541 @@
+{
+  "messages_recent": [
+    {
+      "id": "ba9f8ee5-a28b-4390-b3da-f4de5b90d3d1",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "Hello",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-02T01:33:09.698823+00:00"
+    },
+    {
+      "id": "32cad452-80d1-49f3-b463-cf0ec695e889",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "$1",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-02T01:32:24.899045+00:00"
+    },
+    {
+      "id": "ff3d43ab-d5a4-43d6-9c1c-9b1febf94b86",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "10$",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-02T01:31:41.525837+00:00"
+    },
+    {
+      "id": "3552375a-f393-4f86-8c86-196b583f7e45",
+      "contact_id": "d73e0286-0f5a-40a6-8bfb-4231366fc9bb",
+      "phone_number": "+14438501308",
+      "body": "[Purim System] Uber request received!\nPickup: FROM 2756 W MORSE AVE \nTO 6440 N ALBANY AVE\nDropoff: See pickup note\nWe will text you when it is booked!",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-02T01:30:53.726799+00:00"
+    },
+    {
+      "id": "d5251679-844c-4cb9-ba18-a06c2bf38d96",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "From 2756 w morse ave \nTo 6440 n albany ave",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-02T01:30:51.844493+00:00"
+    },
+    {
+      "id": "68d354ff-9610-4e38-a68a-8d22950e24b8",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "tesrt",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-02T00:01:49.804268+00:00"
+    },
+    {
+      "id": "dbb9ad11-7166-4288-a44f-9df9701b10f9",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "test",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-02T00:00:53.185341+00:00"
+    },
+    {
+      "id": "e500486b-53e6-49d1-a631-aa26ab92cdfa",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "Wow thats cool!",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-01T23:47:41.582699+00:00"
+    },
+    {
+      "id": "1c45d64d-f851-4407-ad9f-535826947c55",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "This is a test reply from the browser agent.",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-01T23:47:26.543398+00:00"
+    },
+    {
+      "id": "7a184af3-baa4-4598-8894-0744ef65eec3",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "test",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-01T23:44:34.875552+00:00"
+    },
+    {
+      "id": "fe243010-7f59-4c23-a3ed-d797e93ba047",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "$10",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-01T23:40:12.073507+00:00"
+    },
+    {
+      "id": "e17fddaa-5b89-4d7b-aa81-bb706cd48fee",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "From 2756 w morse ave \nTo 6440 n albany ave",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-01T23:31:17.100945+00:00"
+    },
+    {
+      "id": "5bf66069-dfd3-4a70-869c-3e8ec8e1d00c",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "$10",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-01T23:27:50.986828+00:00"
+    },
+    {
+      "id": "39d58cc0-039d-4532-b259-f9fc8f5fe0e6",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "10$",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-01T23:27:15.101594+00:00"
+    },
+    {
+      "id": "5022a240-299f-4b50-8d31-c206bcdc5d1d",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "Test",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-01T23:26:29.07484+00:00"
+    },
+    {
+      "id": "fcccbe23-eeb1-46aa-9b3b-b0d0da20a5b0",
+      "contact_id": "d73e0286-0f5a-40a6-8bfb-4231366fc9bb",
+      "phone_number": "+14438501308",
+      "body": "You're clearly just playing around. If you have a question, spit it out!",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-01T23:14:01.537161+00:00"
+    },
+    {
+      "id": "e8172a2e-7136-4e05-8244-69a805b35ef5",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "Test",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-01T23:13:57.738175+00:00"
+    },
+    {
+      "id": "fd2e176c-b285-46c7-8f74-2087f5582ce5",
+      "contact_id": "d73e0286-0f5a-40a6-8bfb-4231366fc9bb",
+      "phone_number": "+14438501308",
+      "body": "You're testing me? How original! What's your actual question?",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-01T22:19:42.486793+00:00"
+    },
+    {
+      "id": "80fb228a-944e-47c7-8b8f-87d297d284c1",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "Test",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-01T22:19:41.434679+00:00"
+    },
+    {
+      "id": "17f93b41-8ba9-41d7-ace4-3dd3afd3ec14",
+      "contact_id": "27902538-cac0-47e2-8692-158bae57cd1c",
+      "phone_number": "+16082175729",
+      "body": "What do you want?",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-01T22:18:47.02293+00:00"
+    }
+  ],
+  "uber_requests": [],
+  "matanos_pledges": [
+    {
+      "id": "4274d649-cce7-4e32-9c0a-7f46e94448d3",
+      "contact_id": "d73e0286-0f5a-40a6-8bfb-4231366fc9bb",
+      "amount": 1,
+      "is_distributed": false,
+      "is_paid_by_student": false,
+      "created_at": "2026-03-02T01:32:25.278211+00:00"
+    },
+    {
+      "id": "333ba18d-1866-45da-9791-57f9dabfb37b",
+      "contact_id": "d73e0286-0f5a-40a6-8bfb-4231366fc9bb",
+      "amount": 10,
+      "is_distributed": false,
+      "is_paid_by_student": true,
+      "created_at": "2026-03-02T01:31:42.25408+00:00"
+    }
+  ],
+  "contacts_sample": [
+    {
+      "id": "a3c3da4a-89e5-4008-a3bd-020ab6a53f74",
+      "phone_number": "+17633187986",
+      "name": "Sholom Shurpin",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 2,
+      "ai_chat_date": "2026-02-03",
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "d67dc61c-a921-45e6-9051-df3fb10154d4",
+      "phone_number": "+19293820794",
+      "name": null,
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": false,
+      "created_at": "2026-02-04T02:03:39.236963+00:00",
+      "program_state": null,
+      "ai_chat_count": 5,
+      "ai_chat_date": "2026-02-08",
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "26cf7ea5-2a2f-453c-8a18-ebbdbc95764c",
+      "phone_number": "+16467278716",
+      "name": "Mendel  Cheruff",
+      "tags": [
+        "Shiur Aleph"
+      ],
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 2,
+      "ai_chat_date": "2026-02-08",
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "82b9e3cb-01cd-4525-9c27-1940d27b62a8",
+      "phone_number": "+17736617195",
+      "name": "Bemyomin Steinberg",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "611469a8-a86d-4302-bf56-28e7ed8a7863",
+      "phone_number": "+19178593797",
+      "name": "Mendel Nejar (NY)",
+      "tags": [
+        "Shiur Beis"
+      ],
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "b11b3df3-7cfd-40b3-a6c2-4cf0fb89954a",
+      "phone_number": "+17738655940",
+      "name": "Shalom Posner",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "8f87cdc7-cffe-4c62-b2c3-e7bb2fdefd6a",
+      "phone_number": "+14049533324",
+      "name": "Sholom Sollish",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "d17bb687-6d22-4182-b482-1fe3c76c3dbc",
+      "phone_number": "+18476524220",
+      "name": "Sholom Steinberg",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "fcb5fdab-7055-40d0-9292-a016b4169f36",
+      "phone_number": "+15615899626",
+      "name": "Sholom Vigler",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "4182ec08-9458-49fc-9346-871de7e3cfe3",
+      "phone_number": "+13527217596",
+      "name": "Yaakov Notik",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "3f51e6ac-e677-447d-bf68-e1d993d522c0",
+      "phone_number": "+14077472508",
+      "name": "Yankel Lipskier",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "f6a886e5-b154-484f-82b4-a353d9e55df4",
+      "phone_number": "+12679036130",
+      "name": "Yehuda Gurevitz",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "2668b87e-7743-4b7b-896c-4170a01925f4",
+      "phone_number": "+12675162810",
+      "name": "Shmuel Gurevitz",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": false,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 5,
+      "ai_chat_date": "2026-01-09",
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "c9896cd2-2b0f-48cd-9410-8452a7e559b1",
+      "phone_number": "+17732632353",
+      "name": "Shimon Wolf",
+      "tags": null,
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 1,
+      "ai_chat_date": "2026-01-21",
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "c003b896-03e1-46cf-8a17-43aae82fbe06",
+      "phone_number": "+12483198357",
+      "name": "Dovid Kleinman",
+      "tags": [
+        "Shiur Beis"
+      ],
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 5,
+      "ai_chat_date": "2026-02-02",
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "7a0ae6f1-2684-45a5-9cbc-36ba8b1524ab",
+      "phone_number": "+19194548090",
+      "name": "Mendel Cotlar",
+      "tags": [
+        "Shiur Beis"
+      ],
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "06c00ad0-2d26-4408-9157-97ee2bdcba0d",
+      "phone_number": "+19297358310",
+      "name": "Getzel Minkowitz",
+      "tags": [
+        "Shiur Beis"
+      ],
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 7,
+      "ai_chat_date": "2026-01-04",
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "7d7997f3-4b0c-4dbb-8a05-0213f26f74fa",
+      "phone_number": "+19083285309",
+      "name": "Isaac Kornfeld The Great",
+      "tags": [
+        "Shiur Beis"
+      ],
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "4ea2d729-b0a0-4810-92ab-8cd8b3782af6",
+      "phone_number": "+15616906518",
+      "name": "Levi Barash",
+      "tags": [
+        "Shiur Beis"
+      ],
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "e0918ca7-2b5e-4e92-b48d-17a4113d32f2",
+      "phone_number": "+17736983383",
+      "name": "Levi Turk",
+      "tags": [
+        "Shiur Beis"
+      ],
+      "active_program_id": null,
+      "program_step": null,
+      "is_agent_mode": null,
+      "created_at": "2025-12-15T05:31:40.599405+00:00",
+      "program_state": null,
+      "ai_chat_count": 0,
+      "ai_chat_date": null,
+      "ai_rate_limit_daily": 20,
+      "last_memory_reset": "2000-01-01T00:00:00+00:00"
+    }
+  ]
+}

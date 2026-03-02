@@ -1,0 +1,65 @@
+{
+  "ubers": [],
+  "msgs": [
+    {
+      "id": "ba9f8ee5-a28b-4390-b3da-f4de5b90d3d1",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "Hello",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-02T01:33:09.698823+00:00"
+    },
+    {
+      "id": "32cad452-80d1-49f3-b463-cf0ec695e889",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "$1",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-02T01:32:24.899045+00:00"
+    },
+    {
+      "id": "ff3d43ab-d5a4-43d6-9c1c-9b1febf94b86",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "10$",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-02T01:31:41.525837+00:00"
+    },
+    {
+      "id": "3552375a-f393-4f86-8c86-196b583f7e45",
+      "contact_id": "d73e0286-0f5a-40a6-8bfb-4231366fc9bb",
+      "phone_number": "+14438501308",
+      "body": "[Purim System] Uber request received!\nPickup: FROM 2756 W MORSE AVE \nTO 6440 N ALBANY AVE\nDropoff: See pickup note\nWe will text you when it is booked!",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-02T01:30:53.726799+00:00"
+    },
+    {
+      "id": "d5251679-844c-4cb9-ba18-a06c2bf38d96",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "From 2756 w morse ave \nTo 6440 n albany ave",
+      "direction": "inbound",
+      "status": "received",
+      "image_url": null,
+      "created_at": "2026-03-02T01:30:51.844493+00:00"
+    },
+    {
+      "id": "68d354ff-9610-4e38-a68a-8d22950e24b8",
+      "contact_id": null,
+      "phone_number": "+14438501308",
+      "body": "tesrt",
+      "direction": "outbound",
+      "status": "sent",
+      "image_url": null,
+      "created_at": "2026-03-02T00:01:49.804268+00:00"
+    }
+  ]
+}

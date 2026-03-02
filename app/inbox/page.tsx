@@ -37,12 +37,13 @@ export default function GeneralInbox() {
         const { data } = await supabase
             .from('messages')
             .select(`*, contacts(name, phone_number)`)
-            .order('created_at', { ascending: true })
-            .limit(200);
+            .order('created_at', { ascending: false })
+            .limit(5000);
 
         if (data) {
-            setMessages(data as Message[]);
-            buildConversations(data as Message[]);
+            const chronological = (data as Message[]).reverse();
+            setMessages(chronological);
+            buildConversations(chronological);
         }
     };
 
