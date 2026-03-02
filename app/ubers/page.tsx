@@ -97,7 +97,7 @@ export default function UbersDashboard() {
                     phone_number: phone,
                     direction: 'outbound',
                     status: 'queued',
-                    body: `Your Uber has been booked! Make sure you get a confirmation text from Uber. If you don't receive it within 2 minutes, text us back ASAP so we can rebook it.`
+                    body: `Your Uber has been booked!\nPickup: ${bookingRequest.pickup_address}\nDropoff: ${bookingRequest.dropoff_address}\nMake sure you get a confirmation text from Uber with the driver info!`
                 });
         }
 

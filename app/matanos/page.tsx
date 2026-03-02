@@ -80,20 +80,30 @@ export default function MatanosDashboard() {
         const pendingIds = pledges.filter(p => !p.is_distributed).map(p => p.id);
         if (pendingIds.length === 0) return;
 
-        await supabase
+        const { error } = await supabase
             .from('matanos_pledges')
             .update({ is_distributed: true })
             .in('id', pendingIds);
+
+        if (error) {
+            alert(`Error caching out: ${error.message}`);
+            return;
+        }
 
         // Refresh the UI immediately
         await fetchPledges();
     };
 
     const handleMarkPaid = async (id: string, currentStatus: boolean) => {
-        await supabase
+        const { error } = await supabase
             .from('matanos_pledges')
             .update({ is_paid_by_student: !currentStatus })
             .eq('id', id);
+
+        if (error) {
+            alert(`Error updating payment status: ${error.message}`);
+            return;
+        }
 
         // Refresh the UI immediately
         await fetchPledges();

@@ -49,9 +49,9 @@ export async function POST(request: Request) {
         }
 
         // RULE 2: Uber Requests
-        const uberMatch = text.match(/FROM\s*:?\s*([\s\S]*?)\s*TO\s*:?\s*([\s\S]*)/i) || text.match(/FROM\s*([\s\S]*?)\s*TO\s*([\s\S]*)/i);
+        const uberMatch = text.match(/(?:FROM|PICKUP)\s*:?\s*([\s\S]*?)\s*(?:TO|DROPOFF)\s*:?\s*([\s\S]*)/i) || text.match(/(?:FROM|PICKUP)\s*([\s\S]*?)\s*(?:TO|DROPOFF)\s*([\s\S]*)/i);
 
-        if (uberMatch || text.includes('FROM ') || text.includes('TO ')) {
+        if (uberMatch || text.includes('FROM ') || text.includes('TO ') || text.includes('PICKUP ') || text.includes('DROPOFF ')) {
             let pickup = text;
             let dropoff = "See pickup note";
 
@@ -72,6 +72,10 @@ export async function POST(request: Request) {
                     const mapData = await mapRes.json();
 
                     if (mapData.rows?.[0]?.elements?.[0]?.status === 'OK') {
+                        // Expand to full formatted addresses!
+                        if (mapData.origin_addresses?.[0]) pickup = mapData.origin_addresses[0];
+                        if (mapData.destination_addresses?.[0]) dropoff = mapData.destination_addresses[0];
+
                         const dist = mapData.rows[0].elements[0].distance.text;
                         const dur = mapData.rows[0].elements[0].duration.text;
                         const miles = parseFloat(dist.replace(/[^0-9.]/g, ''));

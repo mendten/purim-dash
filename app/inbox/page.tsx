@@ -23,7 +23,6 @@ type Conversation = {
     name: string | null;
     lastMessage: string;
     lastTime: string;
-    unread: number;
 };
 
 export default function GeneralInbox() {
@@ -61,7 +60,7 @@ export default function GeneralInbox() {
                     name: msg.contacts?.name || null,
                     lastMessage: msg.body || '',
                     lastTime: msg.created_at,
-                    unread: msg.direction === 'inbound' ? 1 : 0,
+                    // unread: msg.direction === 'inbound' ? 1 : 0, // Removed unread logic
                 });
             } else {
                 existing.lastMessage = msg.body || '';
@@ -174,14 +173,10 @@ export default function GeneralInbox() {
                                             <p className="text-xs text-slate-400 truncate mt-1">{convo.lastMessage}</p>
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
-                                            <span className="text-[10px] text-slate-300 whitespace-nowrap">
+                                            <span className="text-[10px] text-slate-400 whitespace-nowrap text-right">
+                                                {new Date(convo.lastTime).toLocaleDateString()}<br />
                                                 {new Date(convo.lastTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
-                                            {convo.unread > 0 && (
-                                                <span className="bg-[#1a237e] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                                                    {convo.unread}
-                                                </span>
-                                            )}
                                         </div>
                                     </div>
                                 </button>
