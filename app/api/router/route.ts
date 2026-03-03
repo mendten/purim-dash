@@ -53,6 +53,16 @@ export async function POST(request: Request) {
                     is_distributed: false,
                     is_paid_by_student: false
                 });
+
+                // Send Option C confirmation text
+                await supabase.from('messages').insert({
+                    contact_id: contactId,
+                    phone_number: phone,
+                    body: `Yasher Koach! We recorded your $${amount} Matanos L'Evyonim pledge. Please keep the cash safe in your pocket until we collect it tonight. Freilichen Purim!`,
+                    direction: 'outbound',
+                    status: 'queued'
+                });
+
                 return NextResponse.json({ status: 'success', routedTo: 'matanos' });
             }
         }

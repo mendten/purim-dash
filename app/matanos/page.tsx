@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Lock, LogOut, DollarSign, History, CheckCircle2, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, LogOut, DollarSign, History, CheckCircle2, XCircle, ChevronDown, ChevronUp, Printer, MessageSquare, Send } from "lucide-react";
 import Link from "next/link";
 
 type Pledge = {
@@ -121,6 +121,34 @@ export default function MatanosDashboard() {
         await fetchPledges();
     };
 
+    const [showMassTextModal, setShowMassTextModal] = useState(false);
+    const [massTextTemplate, setMassTextTemplate] = useState("[Purim System] Reminder! You currently have {{AMOUNT}} in outstanding Matanos L'Evyonim pledges that you collected today. Please bring this cash to Rabbi Perlstein at 2801 W Albion Ave as soon as possible to settle up.");
+    const [isSendingMassText, setIsSendingMassText] = useState(false);
+
+    const handleSendMassText = async () => {
+        setIsSendingMassText(true);
+        const contactsToText = groupedPledges.filter(g => g.outstandingAmount > 0 && g.contact_id);
+
+        const messagesToInsert = contactsToText.map(g => ({
+            contact_id: g.contact_id,
+            phone_number: g.phone_number,
+            body: massTextTemplate.replace('{{AMOUNT}}', `$${g.outstandingAmount.toFixed(2)}`),
+            direction: 'outbound' as const,
+            status: 'queued'
+        }));
+
+        if (messagesToInsert.length > 0) {
+            const { error } = await supabase.from('messages').insert(messagesToInsert);
+            if (error) {
+                alert(`Error sending messages: ${error.message}`);
+            } else {
+                alert(`Successfully queued messages for ${messagesToInsert.length} bochurim.`);
+                setShowMassTextModal(false);
+            }
+        }
+        setIsSendingMassText(false);
+    };
+
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">Loading...</div>;
 
     if (!isAuthenticated) {
@@ -202,11 +230,20 @@ export default function MatanosDashboard() {
     const groupedPledges = getGroupedPledges();
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
+        <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8 print:p-0 print:bg-white">
+            <style jsx global>{`
+                @media print {
+                    body * { visibility: hidden; }
+                    .print-area, .print-area * { visibility: visible; }
+                    .print-area { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; }
+                    .no-print { display: none !important; }
+                }
+            `}</style>
+
             <div className="max-w-5xl mx-auto space-y-6">
 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 gap-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 gap-4 no-print">
                     <div>
                         <h1 className="text-2xl font-bold text-[#1a237e]">Matanos Distribution</h1>
                         <p className="text-slate-500 text-sm">Rabbi Perlstein&apos;s Live Dashboard</p>
@@ -226,7 +263,7 @@ export default function MatanosDashboard() {
                 </div>
 
                 {view === 'live' ? (
-                    <>
+                    <div className="no-print space-y-6">
                         {/* Stats Cards */}
                         <div className="grid md:grid-cols-3 gap-6">
                             <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#fbc02d] relative overflow-hidden">
@@ -309,10 +346,10 @@ export default function MatanosDashboard() {
                                 )}
                             </div>
                         </div>
-                    </>
+                    </div>
                 ) : (
                     /* Settlement View */
-                    <>
+                    <div className="space-y-6">
                         {/* Settlement Totals */}
                         <div className="grid grid-cols-3 gap-4">
                             <div className="bg-white p-4 rounded-xl border border-slate-100 text-center">
@@ -329,10 +366,26 @@ export default function MatanosDashboard() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100">
-                                <h3 className="font-bold text-[#1a237e]">Post-Purim Settlement</h3>
-                                <p className="text-sm text-slate-500">Mark who actually brought you the physical cash/check</p>
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print-area">
+                            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div>
+                                    <h3 className="font-bold text-[#1a237e]">Post-Purim Settlement</h3>
+                                    <p className="text-sm text-slate-500">Mark who actually brought you the physical cash</p>
+                                </div>
+                                <div className="flex gap-2 no-print">
+                                    <button
+                                        onClick={() => window.print()}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition-all text-sm"
+                                    >
+                                        <Printer size={16} /> Print List
+                                    </button>
+                                    <button
+                                        onClick={() => setShowMassTextModal(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#1a237e] hover:bg-[#1a237e]/90 text-white rounded-lg font-bold transition-all text-sm shadow-sm"
+                                    >
+                                        <MessageSquare size={16} /> Mass Text Missing
+                                    </button>
+                                </div>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 {groupedPledges.map(g => (
@@ -378,11 +431,11 @@ export default function MatanosDashboard() {
                                                         >
                                                             {p.is_paid_by_student ? (
                                                                 <>
-                                                                    <CheckCircle2 size={16} /> Paid ✓
+                                                                    <CheckCircle2 size={16} /> <span className="no-print">Paid ✓</span><span className="hidden print:inline text-green-700">PAID</span>
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <XCircle size={16} /> Mark as Paid
+                                                                    <XCircle size={16} className="no-print" /> <span className="no-print">Mark as Paid</span><span className="hidden print:inline text-red-500 font-bold border-b border-red-500 pb-1 w-16 inline-block text-center">_____</span>
                                                                 </>
                                                             )}
                                                         </button>
@@ -394,9 +447,52 @@ export default function MatanosDashboard() {
                                 ))}
                             </div>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
+
+            {/* Mass Text Modal */}
+            {showMassTextModal && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100">
+                        <div className="p-6 border-b border-slate-100 bg-slate-50">
+                            <h2 className="text-xl font-bold text-[#1a237e] flex items-center gap-2">
+                                <MessageSquare size={24} />
+                                Mass Text Collection Reminder
+                            </h2>
+                            <p className="text-slate-500 text-sm mt-1">This will send an SMS to {groupedPledges.filter(g => g.outstandingAmount > 0).length} bochurim who still have outstanding balances.</p>
+                        </div>
+                        <div className="p-6">
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Message Template (Editable):</label>
+                            <p className="text-xs text-slate-400 mb-2">Leave <code className="bg-slate-100 px-1 rounded text-[#1a237e]">{"{{AMOUNT}}"}</code> in the text—it will automatically be replaced with each person's specific outstanding balance.</p>
+                            <textarea
+                                value={massTextTemplate}
+                                onChange={(e) => setMassTextTemplate(e.target.value)}
+                                className="w-full h-40 p-4 rounded-xl border border-slate-200 focus:border-[#1a237e] focus:ring-2 focus:ring-[#1a237e]/20 outline-none text-slate-700 resize-none font-medium"
+                            />
+                        </div>
+                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
+                            <button
+                                onClick={() => setShowMassTextModal(false)}
+                                className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSendMassText}
+                                disabled={isSendingMassText || groupedPledges.filter(g => g.outstandingAmount > 0).length === 0}
+                                className="px-6 py-3 rounded-xl font-bold text-white bg-[#1a237e] hover:bg-[#1a237e]/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {isSendingMassText ? 'Sending...' : (
+                                    <>
+                                        <Send size={18} /> Send Messages Now
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
