@@ -27,6 +27,17 @@ export async function POST(request: Request) {
             const { data: contactData } = await supabase.from('contacts').select('id').eq('phone_number', phone).maybeSingle();
             if (contactData) {
                 contactId = contactData.id;
+            } else {
+                // Potential race condition with the messages table trigger creating the contact.
+                // Wait 2000ms and try again.
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                const { data: contactDataRetry } = await supabase.from('contacts').select('id').eq('phone_number', phone).maybeSingle();
+                if (contactDataRetry) {
+                    console.log(`[PURIM ROUTER] Contact found after 2s delay! ID: ${contactDataRetry.id}`);
+                    contactId = contactDataRetry.id;
+                } else {
+                    console.log(`[PURIM ROUTER] Contact still not found after 2s delay.`);
+                }
             }
         }
 
