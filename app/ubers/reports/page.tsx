@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Car, MapPin, Users, Download, Printer, ArrowLeft, BarChart3 } from "lucide-react";
+import { Car, MapPin, Users, Download, Printer, ArrowLeft, BarChart3, Edit, Trash2, PlusCircle, X, Save } from "lucide-react";
 import Link from "next/link";
 
 type UberRequest = {
@@ -40,7 +40,15 @@ type GroupedByPerson = {
 export default function UberReports() {
     const [requests, setRequests] = useState<UberRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(false);
     const [activeTab, setActiveTab] = useState<'location' | 'person' | 'summary'>('location');
+    const [expandedLocs, setExpandedLocs] = useState<Record<string, boolean>>({});
+    const [expandedPersons, setExpandedPersons] = useState<Record<string, boolean>>({});
+
+    // Editing State
+    const [editingRequest, setEditingRequest] = useState<UberRequest | null>(null);
+    const [editForm, setEditForm] = useState<{ price: string, area: string, dropoff: string }>({ price: '', area: '', dropoff: '' });
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -71,12 +79,120 @@ export default function UberReports() {
         }
     };
 
+    const runSync = async () => {
+        if (!confirm("This will scan all old rides and assign them to a location area. Continue?")) return;
+        setIsSyncing(true);
+        try {
+            const res = await fetch('/api/geocode-sync', { method: 'POST' });
+            const result = await res.json();
+            if (result.success) {
+                alert(`Successfully synced ${result.updated} records! Re-fetching data...`);
+                await fetchData();
+            } else {
+                alert(`Error syncing: ${result.error}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error running sync.");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     const getName = (req: UberRequest): string => {
         return req.contacts?.name || 'Unknown Bocher';
     };
 
     const getPhone = (req: UberRequest): string => {
         return req.contacts?.phone_number || req.phone_number || '';
+    };
+
+    const openEditModal = (req: UberRequest, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingRequest(req);
+        setEditForm({
+            price: req.exact_price !== null ? req.exact_price.toString() : '',
+            area: req.resolved_area || '',
+            dropoff: req.dropoff_address || ''
+        });
+    };
+
+    const closeEditModal = () => {
+        setEditingRequest(null);
+    };
+
+    const saveEdit = async () => {
+        if (!editingRequest) return;
+        setIsSaving(true);
+        try {
+            const priceVal = editForm.price ? parseFloat(editForm.price) : null;
+            const updates = {
+                exact_price: priceVal,
+                resolved_area: editForm.area,
+                dropoff_address: editForm.dropoff
+            };
+
+            const { error } = await supabase.from('uber_requests').update(updates).eq('id', editingRequest.id);
+            if (error) throw error;
+
+            // Optimistic update
+            setRequests(requests.map(r => r.id === editingRequest.id ? { ...r, ...updates } : r));
+            closeEditModal();
+        } catch (e) {
+            console.error(e);
+            alert("Error saving request.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const deleteRequest = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm("Are you sure you want to delete this ride completely? This cannot be undone.")) return;
+
+        try {
+            const { error } = await supabase.from('uber_requests').delete().eq('id', id);
+            if (error) throw error;
+
+            setRequests(requests.filter(r => r.id !== id));
+        } catch (e) {
+            console.error(e);
+            alert("Error deleting request.");
+        }
+    };
+
+    const addManualBreakdown = async () => {
+        const name = prompt("Enter Bocher Name:");
+        if (!name) return;
+        const phone = prompt("Enter Phone Number (optional):") || "";
+        const priceStr = prompt("Enter Price (e.g., 15.50):");
+        if (!priceStr) return;
+        const price = parseFloat(priceStr);
+        if (isNaN(price)) return alert("Invalid price.");
+        const area = prompt("Enter Resolved Area (e.g., West Ridge):") || "Unknown Area";
+
+        try {
+            const { data, error } = await supabase.from('uber_requests').insert({
+                pickup_address: "Manual Entry",
+                dropoff_address: "Manual Entry",
+                status: "completed",
+                exact_price: price,
+                phone_number: phone,
+                resolved_area: area,
+                contact_id: null
+            }).select();
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                // Attach mock contact info to display properly without reloading
+                const newReq = { ...data[0], contacts: { name, phone_number: phone } } as UberRequest;
+                setRequests([newReq, ...requests]);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error adding request.");
+        }
     };
 
     // Calculate groupings
@@ -175,6 +291,14 @@ export default function UberReports() {
                     </div>
 
                     <div className="flex items-center gap-3 no-print">
+                        <button
+                            onClick={runSync}
+                            disabled={isSyncing}
+                            className={`flex items-center gap-2 px-4 py-2 ${isSyncing ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-50 hover:bg-indigo-100 text-[#1a237e]'} font-bold rounded-xl transition-colors`}
+                        >
+                            <MapPin size={18} />
+                            <span className="hidden md:inline">{isSyncing ? 'Syncing...' : 'Resolve Missing Areas'}</span>
+                        </button>
                         <button onClick={exportToCSV} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">
                             <Download size={18} />
                             <span className="hidden md:inline">Export CSV</span>
@@ -223,45 +347,64 @@ export default function UberReports() {
                                 <h2 className="hidden print:block text-2xl font-bold text-[#1a237e] mb-4 border-b pb-2">By Location</h2>
                                 {groupedByLocation.map((group, idx) => (
                                     <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:border-slate-300 print:shadow-none print-break-inside-avoid">
-                                        <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center print:bg-slate-100">
+                                        <div
+                                            className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center print:bg-slate-100 cursor-pointer hover:bg-slate-100 transition-colors"
+                                            onClick={() => setExpandedLocs(prev => ({ ...prev, [group.area]: !prev[group.area] }))}
+                                        >
                                             <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                                                 <MapPin className="text-[#1a237e]" size={20} />
                                                 {group.area}
+                                                <span className="text-sm font-medium text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-full ml-2">
+                                                    {group.rides.length} rides
+                                                </span>
                                             </h3>
                                             <div className="text-lg font-black text-[#1a237e] bg-[#1a237e]/10 px-4 py-1.5 rounded-lg print:border print:border-[#1a237e]">
                                                 ${group.totalCost.toFixed(2)}
                                             </div>
                                         </div>
-                                        <div className="p-0">
-                                            <table className="w-full text-left text-sm">
-                                                <thead className="bg-[#f8fafc] text-xs uppercase text-slate-500 font-bold print:bg-white">
-                                                    <tr>
-                                                        <th className="p-4 py-3 border-b">Bocher</th>
-                                                        <th className="p-4 py-3 border-b hidden md:table-cell">Pickup &rarr; Dropoff</th>
-                                                        <th className="p-4 py-3 border-b text-right">Price</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {group.rides.map(req => (
-                                                        <tr key={req.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 tr-transition">
-                                                            <td className="p-4">
-                                                                <div className="font-bold text-slate-800">{getName(req)}</div>
-                                                                <div className="text-xs text-slate-400">{getPhone(req)}</div>
-                                                            </td>
-                                                            <td className="p-4 hidden md:table-cell text-slate-600">
-                                                                <div className="flex flex-col gap-1">
-                                                                    <div className="text-xs"><span className="font-bold text-slate-400">FR:</span> {req.pickup_address}</div>
-                                                                    <div className="text-xs"><span className="font-bold text-slate-400">TO:</span> {req.dropoff_address}</div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-4 text-right font-bold text-green-700">
-                                                                ${(req.exact_price || 0).toFixed(2)}
-                                                            </td>
+                                        {(expandedLocs[group.area] || (typeof window !== 'undefined' && window.matchMedia('print').matches)) && (
+                                            <div className="p-0 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                <table className="w-full text-left text-sm">
+                                                    <thead className="bg-[#f8fafc] text-xs uppercase text-slate-500 font-bold print:bg-white">
+                                                        <tr>
+                                                            <th className="p-4 py-3 border-b">Bocher</th>
+                                                            <th className="p-4 py-3 border-b hidden md:table-cell">Pickup &rarr; Dropoff</th>
+                                                            <th className="p-4 py-3 border-b text-right">Price</th>
+                                                            <th className="p-4 py-3 border-b w-24 no-print"></th>
                                                         </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                    </thead>
+                                                    <tbody>
+                                                        {group.rides.map(req => (
+                                                            <tr key={req.id} className="group border-b border-slate-50 last:border-0 hover:bg-slate-50 tr-transition">
+                                                                <td className="p-4">
+                                                                    <div className="font-bold text-slate-800">{getName(req)}</div>
+                                                                    <div className="text-xs text-slate-400">{getPhone(req)}</div>
+                                                                </td>
+                                                                <td className="p-4 hidden md:table-cell text-slate-600">
+                                                                    <div className="flex flex-col gap-1">
+                                                                        <div className="text-xs"><span className="font-bold text-slate-400">FR:</span> {req.pickup_address}</div>
+                                                                        <div className="text-xs"><span className="font-bold text-slate-400">TO:</span> {req.dropoff_address}</div>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="p-4 text-right font-bold text-green-700">
+                                                                    ${(req.exact_price || 0).toFixed(2)}
+                                                                </td>
+                                                                <td className="p-4 text-right no-print">
+                                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                                                        <button onClick={(e) => openEditModal(req, e)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg">
+                                                                            <Edit size={16} />
+                                                                        </button>
+                                                                        <button onClick={(e) => deleteRequest(req.id, e)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                                                                            <Trash2 size={16} />
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -272,13 +415,21 @@ export default function UberReports() {
                             <div className="space-y-6">
                                 {groupedByPerson.map((group, idx) => (
                                     <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                                        <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
+                                        <div
+                                            className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors"
+                                            onClick={() => setExpandedPersons(prev => ({ ...prev, [group.name]: !prev[group.name] }))}
+                                        >
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-lg">
                                                     {group.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-slate-800">{group.name}</h3>
+                                                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                                        {group.name}
+                                                        <span className="text-xs font-medium text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-full ml-2">
+                                                            {group.rides.length} rides
+                                                        </span>
+                                                    </h3>
                                                     <p className="text-xs text-slate-500 font-mono">{group.phone}</p>
                                                 </div>
                                             </div>
@@ -286,33 +437,46 @@ export default function UberReports() {
                                                 ${group.totalCost.toFixed(2)}
                                             </div>
                                         </div>
-                                        <div className="p-0">
-                                            <table className="w-full text-left text-sm">
-                                                <thead className="bg-[#f8fafc] text-xs uppercase text-slate-500 font-bold">
-                                                    <tr>
-                                                        <th className="p-4 py-3 border-b w-1/4">Date</th>
-                                                        <th className="p-4 py-3 border-b">Area</th>
-                                                        <th className="p-4 py-3 border-b text-right">Price</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {group.rides.map(req => (
-                                                        <tr key={req.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                                                            <td className="p-4 text-slate-500 text-xs">
-                                                                {new Date(req.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                                                            </td>
-                                                            <td className="p-4">
-                                                                <div className="font-semibold text-slate-700">{req.resolved_area || 'Unknown'}</div>
-                                                                <div className="text-xs text-slate-400 truncate max-w-[200px] md:max-w-md">{req.dropoff_address}</div>
-                                                            </td>
-                                                            <td className="p-4 text-right font-bold text-green-700">
-                                                                ${(req.exact_price || 0).toFixed(2)}
-                                                            </td>
+                                        {(expandedPersons[group.name] || (typeof window !== 'undefined' && window.matchMedia('print').matches)) && (
+                                            <div className="p-0 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                <table className="w-full text-left text-sm">
+                                                    <thead className="bg-[#f8fafc] text-xs uppercase text-slate-500 font-bold">
+                                                        <tr>
+                                                            <th className="p-4 py-3 border-b w-1/4">Date</th>
+                                                            <th className="p-4 py-3 border-b">Area</th>
+                                                            <th className="p-4 py-3 border-b border-r border-transparent">Price</th>
+                                                            <th className="p-4 py-3 border-b w-24 no-print"></th>
                                                         </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                    </thead>
+                                                    <tbody>
+                                                        {group.rides.map(req => (
+                                                            <tr key={req.id} className="group border-b border-slate-50 last:border-0 hover:bg-slate-50">
+                                                                <td className="p-4 text-slate-500 text-xs">
+                                                                    {new Date(req.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                                                </td>
+                                                                <td className="p-4">
+                                                                    <div className="font-semibold text-slate-700">{req.resolved_area || 'Unknown'}</div>
+                                                                    <div className="text-xs text-slate-400 truncate max-w-[200px] md:max-w-md">{req.dropoff_address}</div>
+                                                                </td>
+                                                                <td className="p-4 text-right font-bold text-green-700">
+                                                                    ${(req.exact_price || 0).toFixed(2)}
+                                                                </td>
+                                                                <td className="p-4 text-right no-print">
+                                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                                                        <button onClick={(e) => openEditModal(req, e)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg">
+                                                                            <Edit size={16} />
+                                                                        </button>
+                                                                        <button onClick={(e) => deleteRequest(req.id, e)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                                                                            <Trash2 size={16} />
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -362,6 +526,64 @@ export default function UberReports() {
                 )}
 
             </div>
+
+            {/* Edit Modal */}
+            {editingRequest && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center p-4 border-b border-slate-100">
+                            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <Edit size={18} className="text-[#1a237e]" /> Edit Record
+                            </h2>
+                            <button onClick={closeEditModal} className="text-slate-400 hover:text-slate-600 rounded-full p-1 hover:bg-slate-100">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Price ($)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editForm.price}
+                                    onChange={e => setEditForm({ ...editForm, price: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 font-bold focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Resolved Area</label>
+                                <input
+                                    type="text"
+                                    value={editForm.area}
+                                    onChange={e => setEditForm({ ...editForm, area: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Dropoff Address Fragment</label>
+                                <input
+                                    type="text"
+                                    value={editForm.dropoff}
+                                    onChange={e => setEditForm({ ...editForm, dropoff: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3 justify-end">
+                            <button onClick={closeEditModal} className="px-4 py-2 text-slate-500 font-bold hover:bg-slate-200 rounded-xl transition-colors">
+                                Cancel
+                            </button>
+                            <button
+                                onClick={saveEdit}
+                                disabled={isSaving}
+                                className="px-4 py-2 bg-[#1a237e] text-white font-bold rounded-xl flex items-center gap-2 hover:bg-indigo-800 transition-colors disabled:opacity-50"
+                            >
+                                <Save size={18} /> {isSaving ? "Saving..." : "Save Changes"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
