@@ -59,13 +59,17 @@ export default function Home() {
             <p className="text-sm text-slate-500">Rabbi Perlstein&apos;s distribution dashboard</p>
           </Link>
 
-          <Link href="/ubers" className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:border-[#fbc02d] transition-all group flex flex-col items-center text-center">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:border-[#fbc02d] transition-all group flex flex-col items-center text-center relative">
+            <Link href="/ubers" className="absolute inset-0 z-10"></Link>
             <div className="w-16 h-16 bg-[#1a237e]/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#1a237e] group-hover:text-white transition-colors text-[#1a237e]">
               <Car size={32} />
             </div>
             <h2 className="text-xl font-bold text-[#1a237e] mb-2">Uber Requests</h2>
-            <p className="text-sm text-slate-500">View and book student rides</p>
-          </Link>
+            <p className="text-sm text-slate-500 mb-4">View and book student rides</p>
+            <Link href="/ubers/reports" className="relative z-20 text-xs font-bold text-[#1a237e] bg-[#1a237e]/5 px-3 py-1.5 rounded-lg hover:bg-[#1a237e]/10 transition-colors flex items-center gap-1 mt-auto">
+              📊 Generate Reports
+            </Link>
+          </div>
 
           <Link href="/inbox" className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:border-[#fbc02d] transition-all group flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-[#1a237e]/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#1a237e] group-hover:text-white transition-colors text-[#1a237e]">

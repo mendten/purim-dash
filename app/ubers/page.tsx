@@ -127,7 +127,12 @@ export default function UbersDashboard() {
                             <p className="text-slate-500 text-sm">Live Dispatch Dashboard</p>
                         </div>
                     </div>
-                    <Link href="/" className="text-sm font-bold text-slate-400 hover:text-slate-700">← Back Hub</Link>
+                    <div className="flex items-center gap-4">
+                        <Link href="/ubers/reports" className="text-sm font-bold text-[#1a237e] bg-[#1a237e]/10 px-4 py-2 rounded-xl hover:bg-[#1a237e]/20 transition-colors flex items-center gap-2">
+                            📊 Reports
+                        </Link>
+                        <Link href="/" className="text-sm font-bold text-slate-400 hover:text-slate-700">← Back Hub</Link>
+                    </div>
                 </div>
 
                 {/* Totals Bar */}

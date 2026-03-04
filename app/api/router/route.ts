@@ -92,6 +92,8 @@ export async function POST(request: Request) {
                 return `${addr}, Chicago, IL`;
             };
 
+            let areaName = "Unknown Area";
+
             const mapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
             if (mapsApiKey && dropoff !== "See pickup note") {
                 try {
@@ -113,6 +115,20 @@ export async function POST(request: Request) {
                         distanceText = `${dist} (${dur})`;
                         costEstimate = `$${minC}-$${maxC}`;
                     }
+
+                    // Look up Geocode Area for the dropoff address
+                    const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${destQuery}&key=${mapsApiKey}`);
+                    const geoData = await geoRes.json();
+                    if (geoData.status === 'OK' && geoData.results?.length > 0) {
+                        const components = geoData.results[0].address_components;
+                        const neighborhood = components.find((c: any) => c.types.includes('neighborhood'));
+                        const sublocality = components.find((c: any) => c.types.includes('sublocality') || c.types.includes('sublocality_level_1'));
+                        const locality = components.find((c: any) => c.types.includes('locality'));
+
+                        if (neighborhood) areaName = neighborhood.long_name;
+                        else if (sublocality) areaName = sublocality.long_name;
+                        else if (locality) areaName = locality.long_name;
+                    }
                 } catch (e) {
                     console.error("[PURIM ROUTER] Maps API Error:", e);
                 }
@@ -125,7 +141,8 @@ export async function POST(request: Request) {
                 distance: distanceText || null,
                 estimated_cost: costEstimate || null,
                 phone_number: phone,
-                status: 'new'
+                status: 'new',
+                resolved_area: areaName
             });
 
             if (insertErr) {
