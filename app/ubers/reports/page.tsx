@@ -20,6 +20,8 @@ type UberRequest = {
         name: string;
         phone_number: string;
     };
+    override_name?: string | null;
+    override_phone?: string | null;
     // Appended via Geocode API during fetch
     resolved_area?: string;
 };
@@ -47,7 +49,7 @@ export default function UberReports() {
 
     // Editing State
     const [editingRequest, setEditingRequest] = useState<UberRequest | null>(null);
-    const [editForm, setEditForm] = useState<{ price: string, area: string, dropoff: string }>({ price: '', area: '', dropoff: '' });
+    const [editForm, setEditForm] = useState<{ name: string, phone: string, price: string, area: string, pickup: string, dropoff: string }>({ name: '', phone: '', price: '', area: '', pickup: '', dropoff: '' });
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -100,19 +102,22 @@ export default function UberReports() {
     };
 
     const getName = (req: UberRequest): string => {
-        return req.contacts?.name || 'Unknown Bocher';
+        return req.override_name || req.contacts?.name || 'Unknown Bocher';
     };
 
     const getPhone = (req: UberRequest): string => {
-        return req.contacts?.phone_number || req.phone_number || '';
+        return req.override_phone || req.contacts?.phone_number || req.phone_number || '';
     };
 
     const openEditModal = (req: UberRequest, e: React.MouseEvent) => {
         e.stopPropagation();
         setEditingRequest(req);
         setEditForm({
+            name: getName(req),
+            phone: getPhone(req),
             price: req.exact_price !== null ? req.exact_price.toString() : '',
             area: req.resolved_area || '',
+            pickup: req.pickup_address || '',
             dropoff: req.dropoff_address || ''
         });
     };
@@ -126,10 +131,13 @@ export default function UberReports() {
         setIsSaving(true);
         try {
             const priceVal = editForm.price ? parseFloat(editForm.price) : null;
-            const updates = {
+            const updates: Record<string, any> = {
                 exact_price: priceVal,
                 resolved_area: editForm.area,
-                dropoff_address: editForm.dropoff
+                pickup_address: editForm.pickup,
+                dropoff_address: editForm.dropoff,
+                override_name: editForm.name || null,
+                override_phone: editForm.phone || null
             };
 
             const { error } = await supabase.from('uber_requests').update(updates).eq('id', editingRequest.id);
@@ -540,27 +548,58 @@ export default function UberReports() {
                             </button>
                         </div>
                         <div className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Price ($)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={editForm.price}
-                                    onChange={e => setEditForm({ ...editForm, price: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 font-bold focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Name</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.name}
+                                        onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 font-bold focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Phone</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.phone}
+                                        onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Price ($)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={editForm.price}
+                                        onChange={e => setEditForm({ ...editForm, price: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 font-bold focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Resolved Area</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.area}
+                                        onChange={e => setEditForm({ ...editForm, area: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none"
+                                    />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Resolved Area</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Pickup Address</label>
                                 <input
                                     type="text"
-                                    value={editForm.area}
-                                    onChange={e => setEditForm({ ...editForm, area: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none"
+                                    value={editForm.pickup}
+                                    onChange={e => setEditForm({ ...editForm, pickup: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-[#1a237e] focus:border-transparent outline-none text-sm"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Dropoff Address Fragment</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Dropoff Address</label>
                                 <input
                                     type="text"
                                     value={editForm.dropoff}
