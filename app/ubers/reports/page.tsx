@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Car, MapPin, Users, Download, Printer, ArrowLeft, BarChart3, Edit, Trash2, PlusCircle, X, Save } from "lucide-react";
+import { Car, MapPin, Users, Download, Printer, ArrowLeft, BarChart3, Edit, Trash2, PlusCircle, X, Save, Search } from "lucide-react";
 import Link from "next/link";
 
 type UberRequest = {
@@ -22,7 +22,10 @@ type UberRequest = {
     };
     override_name?: string | null;
     override_phone?: string | null;
-    // Appended via Geocode API during fetch
+    paid_by?: string | null;
+    corrected_pickup?: string | null;
+    corrected_dropoff?: string | null;
+    central_match?: boolean | null;
     resolved_area?: string;
 };
 
@@ -39,6 +42,12 @@ type GroupedByPerson = {
     totalCost: number;
 };
 
+const PAID_BY_OPTIONS = [
+    { value: 'grant', label: 'Grant', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+    { value: 'shliach', label: 'Shliach', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+    { value: 'house_visits', label: 'House Visits', color: 'bg-green-100 text-green-700 border-green-200' },
+];
+
 export default function UberReports() {
     const [requests, setRequests] = useState<UberRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +55,7 @@ export default function UberReports() {
     const [activeTab, setActiveTab] = useState<'location' | 'person' | 'summary'>('location');
     const [expandedLocs, setExpandedLocs] = useState<Record<string, boolean>>({});
     const [expandedPersons, setExpandedPersons] = useState<Record<string, boolean>>({});
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Editing State
     const [editingRequest, setEditingRequest] = useState<UberRequest | null>(null);
@@ -65,8 +75,6 @@ export default function UberReports() {
                 .order("created_at", { ascending: false });
 
             if (data) {
-                // The area is now resolved in the backend routing and saved to the DB
-                // but for older rides before the update, we'll keep a fallback string
                 const enrichedRequests = data.map((req: any) => ({
                     ...req,
                     resolved_area: req.resolved_area || (req.dropoff_address && req.dropoff_address !== "See pickup note" ? "Unknown Area" : "N/A (No Dropoff)")
@@ -109,6 +117,14 @@ export default function UberReports() {
         return req.override_phone || req.contacts?.phone_number || req.phone_number || '';
     };
 
+    const getPickup = (req: UberRequest): string => {
+        return req.corrected_pickup || req.pickup_address || '';
+    };
+
+    const getDropoff = (req: UberRequest): string => {
+        return req.corrected_dropoff || req.dropoff_address || '';
+    };
+
     const openEditModal = (req: UberRequest, e: React.MouseEvent) => {
         e.stopPropagation();
         setEditingRequest(req);
@@ -117,8 +133,8 @@ export default function UberReports() {
             phone: getPhone(req),
             price: req.exact_price !== null ? req.exact_price.toString() : '',
             area: req.resolved_area || '',
-            pickup: req.pickup_address || '',
-            dropoff: req.dropoff_address || ''
+            pickup: getPickup(req),
+            dropoff: getDropoff(req)
         });
     };
 
@@ -143,7 +159,6 @@ export default function UberReports() {
             const { error } = await supabase.from('uber_requests').update(updates).eq('id', editingRequest.id);
             if (error) throw error;
 
-            // Optimistic update
             setRequests(requests.map(r => r.id === editingRequest.id ? { ...r, ...updates } : r));
             closeEditModal();
         } catch (e) {
@@ -151,6 +166,18 @@ export default function UberReports() {
             alert("Error saving request.");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handlePaidByChange = async (id: string, value: string) => {
+        // Optimistic update
+        setRequests(prev => prev.map(r => r.id === id ? { ...r, paid_by: value } : r));
+
+        const { error } = await supabase.from('uber_requests').update({ paid_by: value }).eq('id', id);
+        if (error) {
+            console.error(error);
+            alert("Error updating paid by.");
+            await fetchData(); // revert
         }
     };
 
@@ -187,13 +214,13 @@ export default function UberReports() {
                 exact_price: price,
                 phone_number: phone,
                 resolved_area: area,
-                contact_id: null
+                contact_id: null,
+                paid_by: 'grant'
             }).select();
 
             if (error) throw error;
 
             if (data && data.length > 0) {
-                // Attach mock contact info to display properly without reloading
                 const newReq = { ...data[0], contacts: { name, phone_number: phone } } as UberRequest;
                 setRequests([newReq, ...requests]);
             }
@@ -203,19 +230,27 @@ export default function UberReports() {
         }
     };
 
-    // Calculate groupings
-    const groupedByLocation: GroupedByLocation[] = [];
-    const groupedByPerson: GroupedByPerson[] = [];
+    // Search filter
+    const filteredRequests = searchQuery.trim()
+        ? requests.filter(req => {
+            const q = searchQuery.toLowerCase();
+            return (
+                getName(req).toLowerCase().includes(q) ||
+                getPhone(req).includes(q) ||
+                getPickup(req).toLowerCase().includes(q) ||
+                getDropoff(req).toLowerCase().includes(q) ||
+                (req.pickup_address || '').toLowerCase().includes(q) ||
+                (req.dropoff_address || '').toLowerCase().includes(q) ||
+                (req.resolved_area || '').toLowerCase().includes(q)
+            );
+        })
+        : requests;
 
-    // Grouping logic...
+    // Calculate groupings
     const locationMap = new Map<string, GroupedByLocation>();
     const personMap = new Map<string, GroupedByPerson>();
 
-    requests.forEach(req => {
-        // Only include requests with a price for reporting purposes, or all of them if you want
-        // For payout/export, booked/completed requests with exact_price are key
-
-        // Location
+    filteredRequests.forEach(req => {
         const area = req.resolved_area || "Unknown Area";
         if (!locationMap.has(area)) {
             locationMap.set(area, { area, rides: [], totalCost: 0 });
@@ -224,7 +259,6 @@ export default function UberReports() {
         locGroup.rides.push(req);
         locGroup.totalCost += (req.exact_price || 0);
 
-        // Person
         const personKey = `${getName(req)}|${getPhone(req)}`;
         if (!personMap.has(personKey)) {
             personMap.set(personKey, { name: getName(req), phone: getPhone(req), rides: [], totalCost: 0 });
@@ -234,26 +268,33 @@ export default function UberReports() {
         perGroup.totalCost += (req.exact_price || 0);
     });
 
-    // Convert maps to sorted arrays
-    groupedByLocation.push(...Array.from(locationMap.values()).sort((a, b) => b.totalCost - a.totalCost));
-    groupedByPerson.push(...Array.from(personMap.values()).sort((a, b) => b.totalCost - a.totalCost));
+    const groupedByLocation = Array.from(locationMap.values()).sort((a, b) => b.totalCost - a.totalCost);
+    const groupedByPerson = Array.from(personMap.values()).sort((a, b) => b.totalCost - a.totalCost);
 
     // Stats
-    const totalRides = requests.length;
-    const paidRides = requests.filter(r => r.exact_price !== null).length;
-    const totalCost = requests.reduce((acc, r) => acc + (r.exact_price || 0), 0);
+    const totalRides = filteredRequests.length;
+    const paidRides = filteredRequests.filter(r => r.exact_price !== null).length;
+    const totalCost = filteredRequests.reduce((acc, r) => acc + (r.exact_price || 0), 0);
     const avgCost = paidRides > 0 ? (totalCost / paidRides).toFixed(2) : "0.00";
 
+    // Paid By totals
+    const grantTotal = filteredRequests.filter(r => (r.paid_by || 'grant') === 'grant').reduce((acc, r) => acc + (r.exact_price || 0), 0);
+    const shliachTotal = filteredRequests.filter(r => r.paid_by === 'shliach').reduce((acc, r) => acc + (r.exact_price || 0), 0);
+    const houseVisitsTotal = filteredRequests.filter(r => r.paid_by === 'house_visits').reduce((acc, r) => acc + (r.exact_price || 0), 0);
+
     const exportToCSV = () => {
-        const headers = ["Name", "Phone", "Pickup", "Dropoff", "Resolved Area", "Status", "Exact Price", "Date"];
-        const rows = requests.map(req => [
+        const headers = ["Name", "Phone", "Pickup", "Dropoff", "Corrected Pickup", "Corrected Dropoff", "Resolved Area", "Status", "Exact Price", "Paid By", "Date"];
+        const rows = filteredRequests.map(req => [
             `"${getName(req)}"`,
             `"${getPhone(req)}"`,
             `"${req.pickup_address}"`,
             `"${req.dropoff_address}"`,
+            `"${req.corrected_pickup || ''}"`,
+            `"${req.corrected_dropoff || ''}"`,
             `"${req.resolved_area || ''}"`,
             req.status,
             req.exact_price || 0,
+            `"${req.paid_by || 'grant'}"`,
             `"${new Date(req.created_at).toLocaleString()}"`
         ]);
 
@@ -272,6 +313,46 @@ export default function UberReports() {
 
     const handlePrint = () => {
         window.print();
+    };
+
+    // Shared ride row component
+    const renderPaidByDropdown = (req: UberRequest) => {
+        const current = req.paid_by || 'grant';
+        const opt = PAID_BY_OPTIONS.find(o => o.value === current) || PAID_BY_OPTIONS[0];
+        return (
+            <select
+                value={current}
+                onChange={(e) => handlePaidByChange(req.id, e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                className={`text-xs font-bold rounded-lg px-2 py-1 border cursor-pointer outline-none transition-all ${opt.color}`}
+            >
+                {PAID_BY_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+            </select>
+        );
+    };
+
+    const renderAddressCell = (req: UberRequest) => {
+        const hasCorrections = req.corrected_pickup || req.corrected_dropoff;
+        const pickup = getPickup(req);
+        const dropoff = getDropoff(req);
+        return (
+            <div className="flex flex-col gap-1">
+                <div className="text-xs">
+                    <span className="font-bold text-slate-400">FR:</span> {pickup}
+                    {hasCorrections && req.corrected_pickup && req.pickup_address !== req.corrected_pickup && (
+                        <span className="text-[10px] text-slate-300 ml-1">(orig: {req.pickup_address})</span>
+                    )}
+                </div>
+                <div className="text-xs">
+                    <span className="font-bold text-slate-400">TO:</span> {dropoff}
+                    {hasCorrections && req.corrected_dropoff && req.dropoff_address !== req.corrected_dropoff && (
+                        <span className="text-[10px] text-slate-300 ml-1">(orig: {req.dropoff_address})</span>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -298,7 +379,7 @@ export default function UberReports() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 no-print">
+                    <div className="flex items-center gap-3 no-print flex-wrap justify-end">
                         <button
                             onClick={runSync}
                             disabled={isSyncing}
@@ -327,6 +408,47 @@ export default function UberReports() {
                     </div>
                 ) : (
                     <>
+                        {/* Paid By Summary Cards */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Spent</p>
+                                <p className="text-2xl font-black text-slate-800">${totalCost.toFixed(2)}</p>
+                                <p className="text-[10px] text-slate-400">{totalRides} rides</p>
+                            </div>
+                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center shadow-sm">
+                                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Grant</p>
+                                <p className="text-2xl font-black text-blue-700">${grantTotal.toFixed(2)}</p>
+                                <p className="text-[10px] text-blue-400">{filteredRequests.filter(r => (r.paid_by || 'grant') === 'grant').length} rides</p>
+                            </div>
+                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 text-center shadow-sm">
+                                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Shliach</p>
+                                <p className="text-2xl font-black text-amber-700">${shliachTotal.toFixed(2)}</p>
+                                <p className="text-[10px] text-amber-400">{filteredRequests.filter(r => r.paid_by === 'shliach').length} rides</p>
+                            </div>
+                            <div className="bg-green-50 p-4 rounded-xl border border-green-200 text-center shadow-sm">
+                                <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider">House Visits</p>
+                                <p className="text-2xl font-black text-green-700">${houseVisitsTotal.toFixed(2)}</p>
+                                <p className="text-[10px] text-green-400">{filteredRequests.filter(r => r.paid_by === 'house_visits').length} rides</p>
+                            </div>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="relative no-print">
+                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, phone, address, area..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-[#1a237e]/20 focus:border-[#1a237e] outline-none transition-all shadow-sm"
+                            />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+
                         {/* Tabs */}
                         <div className="flex bg-white p-2 rounded-xl shadow-sm border border-slate-100 no-print">
                             <button
@@ -378,6 +500,7 @@ export default function UberReports() {
                                                             <th className="p-4 py-3 border-b">Bocher</th>
                                                             <th className="p-4 py-3 border-b hidden md:table-cell">Pickup &rarr; Dropoff</th>
                                                             <th className="p-4 py-3 border-b text-right">Price</th>
+                                                            <th className="p-4 py-3 border-b text-center no-print">Paid By</th>
                                                             <th className="p-4 py-3 border-b w-24 no-print"></th>
                                                         </tr>
                                                     </thead>
@@ -389,13 +512,13 @@ export default function UberReports() {
                                                                     <div className="text-xs text-slate-400">{getPhone(req)}</div>
                                                                 </td>
                                                                 <td className="p-4 hidden md:table-cell text-slate-600">
-                                                                    <div className="flex flex-col gap-1">
-                                                                        <div className="text-xs"><span className="font-bold text-slate-400">FR:</span> {req.pickup_address}</div>
-                                                                        <div className="text-xs"><span className="font-bold text-slate-400">TO:</span> {req.dropoff_address}</div>
-                                                                    </div>
+                                                                    {renderAddressCell(req)}
                                                                 </td>
                                                                 <td className="p-4 text-right font-bold text-green-700">
                                                                     ${(req.exact_price || 0).toFixed(2)}
+                                                                </td>
+                                                                <td className="p-4 text-center no-print">
+                                                                    {renderPaidByDropdown(req)}
                                                                 </td>
                                                                 <td className="p-4 text-right no-print">
                                                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
@@ -451,8 +574,9 @@ export default function UberReports() {
                                                     <thead className="bg-[#f8fafc] text-xs uppercase text-slate-500 font-bold">
                                                         <tr>
                                                             <th className="p-4 py-3 border-b w-1/4">Date</th>
-                                                            <th className="p-4 py-3 border-b">Area</th>
+                                                            <th className="p-4 py-3 border-b">Route</th>
                                                             <th className="p-4 py-3 border-b border-r border-transparent">Price</th>
+                                                            <th className="p-4 py-3 border-b text-center no-print">Paid By</th>
                                                             <th className="p-4 py-3 border-b w-24 no-print"></th>
                                                         </tr>
                                                     </thead>
@@ -464,10 +588,16 @@ export default function UberReports() {
                                                                 </td>
                                                                 <td className="p-4">
                                                                     <div className="font-semibold text-slate-700">{req.resolved_area || 'Unknown'}</div>
-                                                                    <div className="text-xs text-slate-400 truncate max-w-[200px] md:max-w-md">{req.dropoff_address}</div>
+                                                                    <div className="text-xs text-slate-400 truncate max-w-[200px] md:max-w-md">{getDropoff(req)}</div>
+                                                                    {req.corrected_dropoff && req.dropoff_address !== req.corrected_dropoff && (
+                                                                        <div className="text-[10px] text-slate-300">(orig: {req.dropoff_address})</div>
+                                                                    )}
                                                                 </td>
                                                                 <td className="p-4 text-right font-bold text-green-700">
                                                                     ${(req.exact_price || 0).toFixed(2)}
+                                                                </td>
+                                                                <td className="p-4 text-center no-print">
+                                                                    {renderPaidByDropdown(req)}
                                                                 </td>
                                                                 <td className="p-4 text-right no-print">
                                                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
@@ -513,6 +643,25 @@ export default function UberReports() {
                                     <div className="bg-white p-6 rounded-2xl border border-slate-100 text-center shadow-sm">
                                         <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">Avg Cost</p>
                                         <p className="text-4xl font-black text-slate-800 mt-2">${avgCost}</p>
+                                    </div>
+                                </div>
+
+                                {/* Paid By Breakdown */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="bg-blue-50 p-6 rounded-2xl border border-blue-200 text-center shadow-sm">
+                                        <p className="text-sm font-bold text-blue-600 uppercase tracking-wide">Grant Total</p>
+                                        <p className="text-3xl font-black text-blue-700 mt-2">${grantTotal.toFixed(2)}</p>
+                                        <p className="text-xs text-blue-400 mt-1">{filteredRequests.filter(r => (r.paid_by || 'grant') === 'grant').length} rides</p>
+                                    </div>
+                                    <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200 text-center shadow-sm">
+                                        <p className="text-sm font-bold text-amber-600 uppercase tracking-wide">Shliach Total</p>
+                                        <p className="text-3xl font-black text-amber-700 mt-2">${shliachTotal.toFixed(2)}</p>
+                                        <p className="text-xs text-amber-400 mt-1">{filteredRequests.filter(r => r.paid_by === 'shliach').length} rides</p>
+                                    </div>
+                                    <div className="bg-green-50 p-6 rounded-2xl border border-green-200 text-center shadow-sm">
+                                        <p className="text-sm font-bold text-green-600 uppercase tracking-wide">House Visits Total</p>
+                                        <p className="text-3xl font-black text-green-700 mt-2">${houseVisitsTotal.toFixed(2)}</p>
+                                        <p className="text-xs text-green-400 mt-1">{filteredRequests.filter(r => r.paid_by === 'house_visits').length} rides</p>
                                     </div>
                                 </div>
 
@@ -626,4 +775,3 @@ export default function UberReports() {
         </div>
     );
 }
-
